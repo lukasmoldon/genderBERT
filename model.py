@@ -47,6 +47,7 @@ model = BertForSequenceClassification.from_pretrained(
     output_attentions=False,
     output_hidden_states=False
 )
+# TODO: Find good values
 optimizer = AdamW(model.parameters(),
                   lr=2e-5,
                   eps=1e-8)
@@ -55,6 +56,7 @@ scheduler = get_linear_schedule_with_warmup(optimizer,
                                             num_training_steps=len(train_dataloader) * EPOCHS)
 
 # Train model
+# TODO : Try it out (couldn't get it to run on my system yet)
 seed_val = 42
 random.seed(seed_val)
 # np.random_seed(seed_val)
