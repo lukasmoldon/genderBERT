@@ -9,15 +9,15 @@ import numpy as np
 
 
 # ------------ CONFIG ------------
-EPOCHS = 2
-BATCH_SIZE = 32
+EPOCHS = 5
+BATCH_SIZE = 4
 # --------------------------------
 
 
 # Load tokenized data
 print("Load data ...")
-embeddings = pd.read_csv("embeddings_subset.csv")
-attention_masks = pd.read_csv("attentionmasks_subset.csv")
+embeddings = pd.read_csv("embeddings_subset.csv", nrows=1000)
+attention_masks = pd.read_csv("attentionmasks_subset.csv",nrows=1000)
 
 # Create tensors from loaded data
 print("Create tensors ...")
@@ -32,7 +32,6 @@ for row in attention_masks.itertuples():
 train_inputs = torch.tensor(train_inputs)
 train_labels = torch.tensor(train_labels)
 train_mask = torch.tensor(train_mask)
-print(train_mask.shape)
 
 # Create TensorDataset/Dataloader for faster training
 print("Create DataLoader ...")
@@ -78,7 +77,7 @@ for epoch_i in range(EPOCHS):
                         labels=batch[1],
                         attention_mask=batch[2])
         loss = outputs[0]
-        total_loss += loss.items()
+        total_loss += loss.item()
         loss.backward()
         # Clip norm of gradients to 1.0
         torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
