@@ -8,11 +8,11 @@ import random
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-# TODO: Add CUDA support
 
 # ------------ CONFIG ------------
 EPOCHS = 5
 BATCH_SIZE = 4
+ROWS_OF_DATA = 10
 # --------------------------------
 
 # Helper function for accuracy
@@ -23,8 +23,8 @@ def flat_accuracy(predicitions, labels):
 
 # Load tokenized data
 print("Load data ...")
-embeddings = pd.read_csv("embeddings_subset.csv", nrows=1000)
-attention_masks = pd.read_csv("attentionmasks_subset.csv",nrows=1000)
+embeddings = pd.read_csv("embeddings_subset.csv", nrows=ROWS_OF_DATA)
+attention_masks = pd.read_csv("attentionmasks_subset.csv",nrows=ROWS_OF_DATA)
 # Create tensors from loaded data and train/test/val-split
 print("Create tensors ...")
 inputs = []
@@ -43,7 +43,7 @@ test_mask ,validation_mask, _, _ = train_test_split(other_mask, other_labels, te
 
 X_train = torch.tensor(X_train)
 X_test = torch.tensor(X_test)
-X_val =torch.tensor(X_val)
+X_val = torch.tensor(X_val)
 
 y_train = torch.tensor(y_train)
 y_test = torch.tensor(y_test)
@@ -70,6 +70,14 @@ model = BertForSequenceClassification.from_pretrained(
     output_attentions=False,
     output_hidden_states=False
 )
+# Set usage of GPU or CPU
+if torch.cuda.is_available():
+    device = torch.device("cuda0")
+    model.cuda()
+    print("Use GPU: {}".format(torch.cuda.get_device_name(0)))
+else:
+    device = torch.device("cpu")
+    print("No GPU available, use CPU instead.")
 # TODO: Find good values
 optimizer = AdamW(model.parameters(),
                   lr=2e-5,
@@ -83,6 +91,7 @@ seed_val = 42
 random.seed(seed_val)
 # np.random_seed(seed_val)
 torch.manual_seed(seed_val)
+torch.cuda.manual_seed_all(seed_val)
 loss_values = []
 for epoch_i in range(EPOCHS):
     print("-------- Epoch {} / {} --------".format(epoch_i + 1, EPOCHS))
@@ -93,12 +102,15 @@ for epoch_i in range(EPOCHS):
     for step, batch in enumerate(train_dataloader):
         if step % 100 == 0 and step > 0:
             print("Batch {:>5,} of {:>5,}.".format(step, len(train_dataloader)))
+        b_input_ids = batch[0].to(device)
+        b_labels = batch[1].to(device)
+        b_input_mask = batch[2].to(device)
         model.zero_grad()
         # batch[0]: ids, [1]:masks, [2]:labels
-        outputs = model(batch[0],
+        outputs = model(b_input_ids,
                         token_type_ids=None,
-                        labels=batch[1],
-                        attention_mask=batch[2])
+                        labels=b_labels,
+                        attention_mask=b_input_mask)
         loss = outputs[0]
         total_loss += loss.item()
         loss.backward()
@@ -115,14 +127,17 @@ for epoch_i in range(EPOCHS):
     model.eval()
     tmp_eval_acc, steps = 0, 0
     for batch in validation_dataloader:
-        b_inputs, b_labels, b_masks = batch
+        b_input_ids = batch[0].to(device)
+        b_labels = batch[1].to(device)
+        b_input_mask = batch[2].to(device)
         with torch.no_grad():
-            outputs = model(b_inputs,
+            outputs = model(b_input_ids,
                             token_type_ids=None,
-                            attention_mask=b_masks)  
-
-        _, predicted = torch.max(outputs[0].data, 1)
-        tmp_eval_acc += (predicted == b_labels).sum().item()
+                            attention_mask=b_input_mask)  
+        logits = outputs[0].to("cpu")
+        label_ids = b_labels.to("cpu")
+        _, predicted = torch.max(logits.data, 1)
+        tmp_eval_acc += (predicted == label_ids).sum().item()
         steps += b_labels.size(0)
     print("Accuracy: {0:.2f}".format(tmp_eval_acc/steps))
 print("Training complete!")
