@@ -1,20 +1,18 @@
 import pandas as pd
-from transformers import BertTokenizer
 import logging
-import tensorflow as tf
-
+from transformers import BertTokenizer
 
 # ------------ CONFIG ------------
-path_data = "C:/Users/lukas/Documents/GitHub/genderBERT/data_subset.csv"
-path_embeddings = "C:/Users/lukas/Documents/GitHub/genderBERT/embeddings_subset.csv"
-path_attentionmasks = "C:/Users/lukas/Documents/GitHub/genderBERT/attentionmasks_subset.csv"
+file_data = "data_subset.csv"
+file_tokens = "tokens_subset.csv"
+file_attentionmasks = "attentionmasks_subset.csv"
 max_tokencount = 510 # threshold in [1,510] (BERT is limited to 512 including CLS and SEP) 
 truncating_method = "head" # how to truncate list of tokens in ["head", "tail", "headtail"]
 # --------------------------------
 
 
 # Load the data
-data = pd.read_csv(path_data)
+data = pd.read_csv(file_data)
 
 # tag statistics
 print("Total: {}".format(len(data)))
@@ -55,5 +53,5 @@ for index, row in data_tokenized.iterrows():
     attention_masks = attention_masks.append({"att_mask": [int(token > 0) for token in row["Tokens"]]}, ignore_index=True)
 
 # store data
-data_tokenized.to_csv(path_embeddings, index=False)
-attention_masks.to_csv(path_attentionmasks, index=False)
+data_tokenized.to_csv(file_tokens, index=False)
+attention_masks.to_csv(file_attentionmasks, index=False)
