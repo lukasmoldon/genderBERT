@@ -4,6 +4,7 @@ from datetime import date, timedelta
 import pandas as pd
 import logging
 from transformers import BertTokenizer
+from tokenizers import BertWordPieceTokenizer
 
 cnt_oversized = 0
 logging.basicConfig(format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%m-%y %H:%M:%S', level=logging.INFO)
@@ -17,13 +18,16 @@ logging.basicConfig(format='%(asctime)s [%(levelname)s] - %(message)s', datefmt=
 # -----------------------------------------------
 
 
-def preparate(file_data, returnDF, max_tokencount=510, truncating_method="head", file_results=None):
+def preparate(file_data, returnDF, max_tokencount=510, truncating_method="head", file_results=None, num_rows=None):
 
     log_starttime = datetime.datetime.now()
 
     # Load the data
     # TODO: Chunking necessary?
-    data = pd.read_csv(file_data)
+    if num_rows is None:
+        data = pd.read_csv(file_data, names=["Gender", "ReviewText"])
+    else:
+        data = pd.read_csv(file_data, nrows=num_rows, names=["Gender", "ReviewText"])
 
     # tag statistics
     logging.info("Total: {}".format(len(data)))
@@ -32,7 +36,9 @@ def preparate(file_data, returnDF, max_tokencount=510, truncating_method="head",
 
     # load the tokenizer and selector for truncating oversized token lists
     logging.info("Loading BERT tokenizer ...")
-    tokenizer = BertTokenizer.from_pretrained("bert-base-uncased", do_lower_case=True)
+    # OLD: tokenizer = BertTokenizer.from_pretrained("bert-base-uncased", do_lower_case=True)
+    tokenizer = BertWordPieceTokenizer("bert-base-uncased-vocab.txt", lowercase=True)
+
     max_tokencount = min(max_tokencount, 510)
     selector = {
         "head": (lambda x: x[:max_tokencount+1] + x[-1:]),
@@ -65,7 +71,7 @@ def preparate(file_data, returnDF, max_tokencount=510, truncating_method="head",
 
 
 def tokenize(text, tokenizer, max_tokencount, truncating_method):
-    tokens = tokenizer.encode(text, add_special_tokens=True)
+    tokens = tokenizer.encode(text, add_special_tokens=True).ids
     if len(tokens) > max_tokencount:
         global cnt_oversized
         cnt_oversized += 1
