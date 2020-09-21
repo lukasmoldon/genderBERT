@@ -1,9 +1,12 @@
+import logging
+import datetime
+from datetime import date, timedelta
 import pandas as pd
 import logging
 from transformers import BertTokenizer
 
 cnt_oversized = 0
-
+logging.basicConfig(format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%m-%y %H:%M:%S', level=logging.INFO)
 
 # ------------ config example values ------------
 # file_data = "data_subset.csv"
@@ -16,17 +19,19 @@ cnt_oversized = 0
 
 def preparate(file_data, returnDF, max_tokencount=510, truncating_method="head", file_results=None):
 
+    log_starttime = datetime.datetime.now()
+
     # Load the data
     # TODO: Chunking necessary?
     data = pd.read_csv(file_data)
 
     # tag statistics
-    print("Total: {}".format(len(data)))
-    print("Male: {} ({:.2%})".format(len(data[data["Gender"] == 1]), len(data[data["Gender"] == 1])/len(data)))
-    print("Female: {} ({:.2%})".format(len(data[data["Gender"] == 0]), len(data[data["Gender"] == 0])/len(data)))
+    logging.info("Total: {}".format(len(data)))
+    logging.info("Male: {} ({:.2%})".format(len(data[data["Gender"] == 1]), len(data[data["Gender"] == 1])/len(data)))
+    logging.info("Female: {} ({:.2%})".format(len(data[data["Gender"] == 0]), len(data[data["Gender"] == 0])/len(data)))
 
     # load the tokenizer and selector for truncating oversized token lists
-    print("Loading BERT tokenizer ...")
+    logging.info("Loading BERT tokenizer ...")
     tokenizer = BertTokenizer.from_pretrained("bert-base-uncased", do_lower_case=True)
     max_tokencount = min(max_tokencount, 510)
     selector = {
@@ -34,18 +39,23 @@ def preparate(file_data, returnDF, max_tokencount=510, truncating_method="head",
         "tail": (lambda x: x[:1] + x[-max_tokencount-1:]),
         "headtail": (lambda x: x[:max_tokencount//4] + x[max_tokencount//4-max_tokencount:]) # adapted from https://arxiv.org/abs/1905.05583
     }
-    print("Done!")
+    logging.info("Done!")
 
     # tokenize, truncate oversized data (BERT is limited to 512 tokens) and apply padding
+    logging.info("Applying tokenizer ...")
     logging.disable(logging.WARNING)
-    print("Applying tokenizer ...")
     data["ReviewText"] = data["ReviewText"].map(lambda x: tokenize(x, tokenizer, max_tokencount, selector[truncating_method]))
-    print("Done!")
+    logging.disable(logging.DEBUG)
+    logging.info("Done!")
     global cnt_oversized
-    print("{} reviews ({:.2%}) were oversized and truncated".format(cnt_oversized, cnt_oversized/len(data)))
+    logging.info("{} reviews ({:.2%}) were oversized and truncated".format(cnt_oversized, cnt_oversized/len(data)))
 
     # padding and attention mask
     data["att_mask"] = data["ReviewText"].map(lambda x: am(x, max_tokencount))
+
+    log_endtime = datetime.datetime.now()
+    log_runtime = (log_endtime - log_starttime)
+    logging.info("Total runtime: " + str(log_runtime))
 
     # return resulting data
     if file_results != None:
