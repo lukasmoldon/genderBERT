@@ -1,3 +1,6 @@
+import logging
+import datetime
+from datetime import date, timedelta
 import torch
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 from transformers import BertForSequenceClassification, AdamW, BertConfig
@@ -7,7 +10,7 @@ import ast
 import random
 import numpy as np
 from sklearn.model_selection import train_test_split
-from tokenizer import preparate
+from tokenizer import prepare_data
 
 
 # ------------ CONFIG ------------
@@ -33,9 +36,9 @@ def train_model(epochs, batch_size, model_train=True, save_model=True, preload_m
     Train a BERT model.
 
     Parameters:
-        epochs (int): Number of epochs for training.
+        epochs(int): Number of epochs for training.
 
-        batch_size(int): Batch size
+        batch_size(int): Batch size.
 
         model_train(bool): Specifies whether model should be trained or not. Does training if true, skips it (i.e. only do validation)
         if false.
@@ -56,25 +59,28 @@ def train_model(epochs, batch_size, model_train=True, save_model=True, preload_m
         model(BertForSequenceClassification): Returns trained model if return_model is set to true.
     '''
     """
-    
+
+    logging.basicConfig(format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%m-%y %H:%M:%S', level=logging.INFO)
+    log_starttime = datetime.datetime.now()
+
     # Load tokenized data
     if load_embeddings is not None:
-        print("Load train/validation data ...")
+        logging.info("Load train/validation data ...")
         # Todo
         exit()
     else:
-        print("Tokenize train/validation data ...")
+        logging.info("Tokenize train/validation data ...")
         if num_rows_train is not None:
-            embeddings = preparate("../datasets/amazon/User_level_train.csv", True, num_rows=num_rows_train, max_tokencount=128, truncating_method="headtail")
+            embeddings = prepare_data("../datasets/amazon/User_level_train.csv", True, num_rows=num_rows_train, max_tokencount=128, truncating_method="headtail")
         else:
-            embeddings = preparate("../datasets/amazon/User_level_train.csv", True, max_tokencount=128)
+            embeddings = prepare_data("../datasets/amazon/User_level_train.csv", True, max_tokencount=128)
         if val_rows is not None:
-            val_data = preparate("../datasets/amazon/User_level_validation.csv", True, num_rows=val_rows, max_tokencount=128, truncating_method="headtail")
+            val_data = prepare_data("../datasets/amazon/User_level_validation.csv", True, num_rows=val_rows, max_tokencount=128, truncating_method="headtail")
         else:
-            val_data = preparate("../datasets/amazon/User_level_validation.csv", True, max_tokencount=128)
+            val_data = prepare_data("../datasets/amazon/User_level_validation.csv", True, max_tokencount=128)
 
     # Create tensors from loaded data
-    print("Create tensors ...")
+    logging.info("Create tensors ...")
     inputs = list(embeddings["ReviewText"])
     labels = list(embeddings["Gender"])
     mask = list(embeddings["att_mask"])
@@ -90,7 +96,7 @@ def train_model(epochs, batch_size, model_train=True, save_model=True, preload_m
     validation_mask = torch.tensor(val_mask)
 
     # Create TensorDataset/Dataloader for faster training
-    print("Create DataLoader ...")
+    logging.info("Create DataLoader ...")
     train_data = TensorDataset(X_train, y_train, train_mask)
     train_sampler = RandomSampler(train_data)
     train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=batch_size)
@@ -101,7 +107,7 @@ def train_model(epochs, batch_size, model_train=True, save_model=True, preload_m
 
     # Create/load model
     if preload_model is None:
-        print("Create new model ...")
+        logging.info("Create new model ...")
         model = BertForSequenceClassification.from_pretrained(
             "bert-base-uncased",
             num_labels=2,
@@ -109,7 +115,7 @@ def train_model(epochs, batch_size, model_train=True, save_model=True, preload_m
             output_hidden_states=False
         )
     else:
-        print("Load pretrained model ...")
+        logging.info("Load pretrained model ...")
         model = BertForSequenceClassification.from_pretrained(
             preload_model,
             num_labels=2,
@@ -121,10 +127,10 @@ def train_model(epochs, batch_size, model_train=True, save_model=True, preload_m
     if torch.cuda.is_available():
         device = torch.device("cuda:0")
         model.cuda()
-        print("Use GPU: {}".format(torch.cuda.get_device_name(0)))
+        logging.info("Use GPU: {}".format(torch.cuda.get_device_name(0)))
     else:
         device = torch.device("cpu")
-        print("No GPU available, use CPU instead.")
+        logging.warning("No GPU available, use CPU instead.")
 
     # TODO: Find good values
     optimizer = AdamW(model.parameters(),
@@ -142,9 +148,9 @@ def train_model(epochs, batch_size, model_train=True, save_model=True, preload_m
     torch.cuda.manual_seed_all(seed_val)
     loss_values = []
     for epoch_i in range(epochs):
-        print("-------- Epoch {} / {} --------".format(epoch_i + 1, epochs))
+        logging.info("-------- Epoch {} / {} --------".format(epoch_i + 1, epochs))
         if model_train:
-            print("Training ...")
+            logging.info("Training ...")
             total_loss = 0
             model.train()
             for step, batch in enumerate(train_dataloader):
@@ -166,14 +172,14 @@ def train_model(epochs, batch_size, model_train=True, save_model=True, preload_m
                 scheduler.step()
             avg_train_loss = total_loss / len(train_dataloader)
             loss_values.append(avg_train_loss)
-            print("Average train loss: {0:.2f}".format(avg_train_loss))
+            logging.info("Average train loss: {0:.2f}".format(avg_train_loss))
             if save_model:
-                print("Save model...")
+                logging.info("Save model...")
                 # TODO: Use Tempfile instead of this mess of a name
                 model.save_pretrained("genderBERT_epoch_{}_V4".format(epoch_i))
         # ---VALIDATION--- 
         if val_rows is not None:
-            print("Start validation ...")
+            logging.info("Start validation ...")
             model.eval()
             tmp_eval_acc, steps = 0, 0
             for batch in validation_dataloader:
@@ -189,8 +195,12 @@ def train_model(epochs, batch_size, model_train=True, save_model=True, preload_m
                 _, predicted = torch.max(logits.data, 1)
                 tmp_eval_acc += (predicted == label_ids).sum().item()
                 steps += b_labels.size(0)
-            print("Accuracy: {0:.2f}".format(tmp_eval_acc/steps))
-    print("Training complete!")
+            logging.info("Accuracy: {0:.2f}".format(tmp_eval_acc/steps))
+    logging.info("Training complete!")
+    log_endtime = datetime.datetime.now()
+    log_runtime = (log_endtime - log_starttime)
+    logging.info("Total runtime: " + str(log_runtime))
+
     if return_model:
         return model
 

@@ -7,7 +7,6 @@ from transformers import BertTokenizer
 from tokenizers import BertWordPieceTokenizer
 
 cnt_oversized = 0
-logging.basicConfig(format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%m-%y %H:%M:%S', level=logging.INFO)
 
 # ------------ config example values ------------
 # file_data = "data_subset.csv"
@@ -47,6 +46,7 @@ def prepare_data(file_data, returnDF, max_tokencount=510, truncating_method="hea
     '''
     """
 
+    logging.basicConfig(format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%m-%y %H:%M:%S', level=logging.INFO)
     log_starttime = datetime.datetime.now()
 
     # Load the data
