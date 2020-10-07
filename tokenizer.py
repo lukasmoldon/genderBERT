@@ -18,7 +18,34 @@ logging.basicConfig(format='%(asctime)s [%(levelname)s] - %(message)s', datefmt=
 # -----------------------------------------------
 
 
-def preparate(file_data, returnDF, max_tokencount=510, truncating_method="head", file_results=None, num_rows=None):
+
+def prepare_data(file_data, returnDF, max_tokencount=510, truncating_method="head", file_results=None, num_rows=None):
+
+    """
+    Prepare the data for the BERT model.
+    (1) Load and analyze the given data set
+    (2) Tokenize the words
+    (3) Truncate oversized data
+    (4) Add padding and create the attention mask
+
+    Parameters:
+        file_data(string): Path to input data.
+
+        returnDF(bool): Returns tokens as pandas dataframe if true.
+
+        max_tokencount(int): Maximum amount of words/tokens in [1,510] (BERT is limited to 512 including CLS and SEP) for a single review, 
+        truncating gets applied if text length exceeds this timit.
+
+        truncating_method(string): Specifies how to truncate an oversized list of tokens using a method from ["head", "tail", "headtail"].
+
+        file_results(string): Specifies whether resulting dataframe should be saved as csv (give path as string) or not (None).
+
+        num_rows(int): Specifies whether input data should be limited to n rows or not (None).
+
+    Returns:
+        data(pandas.DataFrame): Returns dataframe of tokens if returnDF is set to true.
+    '''
+    """
 
     log_starttime = datetime.datetime.now()
 
