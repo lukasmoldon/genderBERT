@@ -34,7 +34,7 @@ def flat_accuracy(predicitions, labels):
     return np.sum(pred_flat == labels_flat) / len(labels_flat)
 
 def train_model(epochs, learning_rate, batch_size, max_tokencount=510, truncating_method="head", model_train=True, save_model=True, preload_model=None, val_rows=None, load_embeddings=None, num_rows_train=None,
-                return_model=False):
+                return_model=False, return_stats=False):
     """
     Train a BERT model.
 
@@ -64,6 +64,8 @@ def train_model(epochs, learning_rate, batch_size, max_tokencount=510, truncatin
         num_rows_train(int): Specifies how many data entries are used in the train set.
 
         return_model(bool): Returns final model if set to true.
+
+        return_stats(bool): Returns statistics of accuracy and loss for each epoch in dict format.
 
     Returns:
         model(BertForSequenceClassification): Returns trained model if return_model is set to true.
@@ -157,6 +159,7 @@ def train_model(epochs, learning_rate, batch_size, max_tokencount=510, truncatin
     torch.manual_seed(seed_val)
     torch.cuda.manual_seed_all(seed_val)
     loss_values = []
+    stats = {}
     for epoch_i in range(epochs):
         logging.info("-------- Epoch {} / {} --------".format(epoch_i + 1, epochs))
         if model_train:
@@ -183,6 +186,7 @@ def train_model(epochs, learning_rate, batch_size, max_tokencount=510, truncatin
             avg_train_loss = total_loss / len(train_dataloader)
             loss_values.append(avg_train_loss)
             logging.info("Average train loss: {0:.2f}".format(avg_train_loss))
+            stats[str(epoch_i)] = {"loss": avg_train_loss}
             if save_model:
                 logging.info("Save model...")
                 # TODO: Use Tempfile instead of this mess of a name
@@ -206,12 +210,19 @@ def train_model(epochs, learning_rate, batch_size, max_tokencount=510, truncatin
                 tmp_eval_acc += (predicted == label_ids).sum().item()
                 steps += b_labels.size(0)
             logging.info("Accuracy: {0:.2f}".format(tmp_eval_acc/steps))
+            stats[str(epoch_i)]["accuracy"] = tmp_eval_acc/steps
     logging.info("Training complete!")
     log_endtime = datetime.datetime.now()
     log_runtime = (log_endtime - log_starttime)
     logging.info("Total runtime: " + str(log_runtime))
 
-    if return_model:
-        return model
+    if return_stats:
+        if return_model:
+            return model, stats
+        else:
+            return stats
+    else:
+        if return_model:
+            return model
 
 #train_model(EPOCHS, LEARNING_RATE, BATCH_SIZE, MAX_TOKENCOUNT, TRUNCATING_METHOD, MODEL_TRAIN, SAVE_MODEL, PRELOAD_MODEL, VAL_ROWS, LOAD_EMBEDDINGS, NUM_ROWS_TRAIN)

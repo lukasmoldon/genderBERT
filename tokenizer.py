@@ -50,7 +50,6 @@ def prepare_data(file_data, returnDF, max_tokencount=510, truncating_method="hea
     log_starttime = datetime.datetime.now()
 
     # Load the data
-    # TODO: Chunking necessary?
     if num_rows is None:
         data = pd.read_csv(file_data, names=["Gender", "ReviewText"])
     else:
