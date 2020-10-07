@@ -11,11 +11,11 @@ from tokenizer import preparate
 
 
 # ------------ CONFIG ------------
-EPOCHS = 3
-BATCH_SIZE = 4
+EPOCHS = 10
+BATCH_SIZE = 16
 MODEL_TRAIN = True
 SAVE_MODEL = True
-PRELOAD_MODEL = "genderBERT_epoch_2_V3_128.model/"
+PRELOAD_MODEL = None
 VAL_ROWS = 100000
 LOAD_EMBEDDINGS = None
 NUM_ROWS_TRAIN = 1000000
@@ -27,9 +27,37 @@ def flat_accuracy(predicitions, labels):
     labels_flat = labels.flatten()
     return np.sum(pred_flat == labels_flat) / len(labels_flat)
 
-def train_model(epochs, batch_size, model_train=True, save_model=True, preload_model=None, val_rows=None, load_embeddings=None, num_rows_train=None):
+def train_model(epochs, batch_size, model_train=True, save_model=True, preload_model=None, val_rows=None, load_embeddings=None, num_rows_train=None,
+                return_model=False):
+    """
+    Train a BERT model.
+
+    Parameters:
+        epochs (int): Number of epochs for training.
+
+        batch_size(int): Batch size
+
+        model_train(bool): Specifies whether model should be trained or not. Does training if true, skips it (i.e. only do validation)
+        if false.
+
+        save_model(bool): Saves model after each epoch if true.
+
+        preload_model(string): Preload model with given path. Train new model if None.
+
+        val_rows(int): Specifies how many data entries are used in the validation set. No validation if None.
+
+        load_embeddings(string): Preload embeddings from given path. Create new embeddings if None.
+
+        num_rows_train(int): Specifies how many data entries are used in the train set.
+
+        return_model(bool): Returns final model if set to true.
+
+    Returns:
+        model(BertForSequenceClassification): Returns trained model if return_model is set to true.
+    '''
+    """
+    
     # Load tokenized data
-    # TODO: Load data if already available
     if load_embeddings is not None:
         print("Load train/validation data ...")
         # Todo
@@ -37,11 +65,11 @@ def train_model(epochs, batch_size, model_train=True, save_model=True, preload_m
     else:
         print("Tokenize train/validation data ...")
         if num_rows_train is not None:
-            embeddings = preparate("../datasets/amazon/User_level_train.csv", True, num_rows=num_rows_train, max_tokencount=128)
+            embeddings = preparate("../datasets/amazon/User_level_train.csv", True, num_rows=num_rows_train, max_tokencount=128, truncating_method="headtail")
         else:
             embeddings = preparate("../datasets/amazon/User_level_train.csv", True, max_tokencount=128)
         if val_rows is not None:
-            val_data = preparate("../datasets/amazon/User_level_validation.csv", True, num_rows=val_rows, max_tokencount=128)
+            val_data = preparate("../datasets/amazon/User_level_validation.csv", True, num_rows=val_rows, max_tokencount=128, truncating_method="headtail")
         else:
             val_data = preparate("../datasets/amazon/User_level_validation.csv", True, max_tokencount=128)
 
@@ -120,8 +148,6 @@ def train_model(epochs, batch_size, model_train=True, save_model=True, preload_m
             total_loss = 0
             model.train()
             for step, batch in enumerate(train_dataloader):
-                if step % 10000 == 0 and step > 0:
-                    print("Batch {:>5,} of {:>5,}.".format(step, len(train_dataloader)))
                 b_input_ids = batch[0].to(device)
                 b_labels = batch[1].to(device)
                 b_input_mask = batch[2].to(device)
@@ -144,7 +170,7 @@ def train_model(epochs, batch_size, model_train=True, save_model=True, preload_m
             if save_model:
                 print("Save model...")
                 # TODO: Use Tempfile instead of this mess of a name
-                model.save_pretrained("genderBERT_epoch_{}_V3_128_retrained.model".format(epoch_i))
+                model.save_pretrained("genderBERT_epoch_{}_V4".format(epoch_i))
         # ---VALIDATION--- 
         if val_rows is not None:
             print("Start validation ...")
@@ -165,5 +191,7 @@ def train_model(epochs, batch_size, model_train=True, save_model=True, preload_m
                 steps += b_labels.size(0)
             print("Accuracy: {0:.2f}".format(tmp_eval_acc/steps))
     print("Training complete!")
+    if return_model:
+        return model
 
-train_model(EPOCHS, BATCH_SIZE, MODEL_TRAIN, SAVE_MODEL, PRELOAD_MODEL, VAL_ROWS, LOAD_EMBEDDINGS, NUM_ROWS_TRAIN)
+#train_model(EPOCHS, BATCH_SIZE, MODEL_TRAIN, SAVE_MODEL, PRELOAD_MODEL, VAL_ROWS, LOAD_EMBEDDINGS, NUM_ROWS_TRAIN)
