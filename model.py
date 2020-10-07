@@ -15,7 +15,10 @@ from tokenizer import prepare_data
 
 # ------------ CONFIG ------------
 EPOCHS = 10
+LEARNING_RATE = 2e-5
 BATCH_SIZE = 16
+MAX_TOKENCOUNT = 128
+TRUNCATING_METHOD = "headtail"
 MODEL_TRAIN = True
 SAVE_MODEL = True
 PRELOAD_MODEL = None
@@ -30,7 +33,7 @@ def flat_accuracy(predicitions, labels):
     labels_flat = labels.flatten()
     return np.sum(pred_flat == labels_flat) / len(labels_flat)
 
-def train_model(epochs, batch_size, model_train=True, save_model=True, preload_model=None, val_rows=None, load_embeddings=None, num_rows_train=None,
+def train_model(epochs, learning_rate, batch_size, max_tokencount=510, truncating_method="head", model_train=True, save_model=True, preload_model=None, val_rows=None, load_embeddings=None, num_rows_train=None,
                 return_model=False):
     """
     Train a BERT model.
@@ -38,7 +41,14 @@ def train_model(epochs, batch_size, model_train=True, save_model=True, preload_m
     Parameters:
         epochs(int): Number of epochs for training.
 
+        learning_rate(int): Learning rate of the model.
+
         batch_size(int): Batch size.
+
+        max_tokencount(int): Maximum amount of words/tokens in [1,510] (BERT is limited to 512 including CLS and SEP) for a single review, 
+        truncating gets applied if text length exceeds this timit.
+
+        truncating_method(string): Specifies how to truncate an oversized list of tokens using a method from ["head", "tail", "headtail"].
 
         model_train(bool): Specifies whether model should be trained or not. Does training if true, skips it (i.e. only do validation)
         if false.
@@ -71,13 +81,13 @@ def train_model(epochs, batch_size, model_train=True, save_model=True, preload_m
     else:
         logging.info("Tokenize train/validation data ...")
         if num_rows_train is not None:
-            embeddings = prepare_data("../datasets/amazon/User_level_train.csv", True, num_rows=num_rows_train, max_tokencount=128, truncating_method="headtail")
+            embeddings = prepare_data("../datasets/amazon/User_level_train.csv", True, num_rows=num_rows_train, max_tokencount=max_tokencount, truncating_method=truncating_method)
         else:
-            embeddings = prepare_data("../datasets/amazon/User_level_train.csv", True, max_tokencount=128)
+            embeddings = prepare_data("../datasets/amazon/User_level_train.csv", True, max_tokencount=max_tokencount)
         if val_rows is not None:
-            val_data = prepare_data("../datasets/amazon/User_level_validation.csv", True, num_rows=val_rows, max_tokencount=128, truncating_method="headtail")
+            val_data = prepare_data("../datasets/amazon/User_level_validation.csv", True, num_rows=val_rows, max_tokencount=max_tokencount, truncating_method=truncating_method)
         else:
-            val_data = prepare_data("../datasets/amazon/User_level_validation.csv", True, max_tokencount=128)
+            val_data = prepare_data("../datasets/amazon/User_level_validation.csv", True, max_tokencount=max_tokencount)
 
     # Create tensors from loaded data
     logging.info("Create tensors ...")
@@ -134,7 +144,7 @@ def train_model(epochs, batch_size, model_train=True, save_model=True, preload_m
 
     # TODO: Find good values
     optimizer = AdamW(model.parameters(),
-                    lr=2e-5,
+                    lr=learning_rate,
                     eps=1e-8)
     scheduler = get_linear_schedule_with_warmup(optimizer,
                                                 num_warmup_steps=0,
@@ -204,4 +214,4 @@ def train_model(epochs, batch_size, model_train=True, save_model=True, preload_m
     if return_model:
         return model
 
-#train_model(EPOCHS, BATCH_SIZE, MODEL_TRAIN, SAVE_MODEL, PRELOAD_MODEL, VAL_ROWS, LOAD_EMBEDDINGS, NUM_ROWS_TRAIN)
+#train_model(EPOCHS, LEARNING_RATE, BATCH_SIZE, MAX_TOKENCOUNT, TRUNCATING_METHOD, MODEL_TRAIN, SAVE_MODEL, PRELOAD_MODEL, VAL_ROWS, LOAD_EMBEDDINGS, NUM_ROWS_TRAIN)
