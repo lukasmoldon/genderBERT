@@ -40,11 +40,10 @@ for lr in LEARNING_RATES:
             else:
                 stats = train_model(EPOCHS, lr, BATCH_SIZE, max_tc, tm, MODEL_TRAIN, SAVE_MODEL, PRELOAD_MODEL, VAL_ROWS, LOAD_EMBEDDINGS, NUM_ROWS_TRAIN, RETURN_MODEL, return_stats=True)
 
-            global_stats["LR:{}_MAXTC:{}_TM:{}".format(lr, max_tc, tm)]
+            global_stats["LR:{}_MAXTC:{}_TM:{}".format(lr, max_tc, tm)] = stats
             with open("../TODO:_ENTER_PATH_HERE/stats.json", "w") as fp:
                 json.dump(global_stats, fp)
 
-logging.info("Done!")
 log_endtime = datetime.datetime.now()
 log_runtime = (log_endtime - log_starttime)
 logging.info("Total runtime: " + str(log_runtime))
