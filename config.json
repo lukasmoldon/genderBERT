@@ -1,0 +1,28 @@
+{
+    "1": {
+        "EPOCHS": 10,
+        "LEARNING_RATE": 2e-5,
+        "BATCH_SIZE": 16,
+        "MAX_TOKENCOUNT": 128,
+        "TRUNCATING_METHOD": "headtail",
+        "MODEL_TRAIN": 1,
+        "SAVE_MODEL": 1,
+        "PRELOAD_MODEL": null,
+        "VAL_ROWS": 100000,
+        "LOAD_EMBEDDINGS": null,
+        "NUM_ROWS_TRAIN": 1000000
+    },
+    "2": {
+        "EPOCHS": 5,
+        "LEARNING_RATE": 2e-5,
+        "BATCH_SIZE": 32,
+        "MAX_TOKENCOUNT": 64,
+        "TRUNCATING_METHOD": "headtail",
+        "MODEL_TRAIN": 1,
+        "SAVE_MODEL": 1,
+        "PRELOAD_MODEL": null,
+        "VAL_ROWS": 100000,
+        "LOAD_EMBEDDINGS": null,
+        "NUM_ROWS_TRAIN": 1000000
+    }
+}
