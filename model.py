@@ -11,6 +11,9 @@ import random
 import numpy as np
 from sklearn.model_selection import train_test_split
 from tokenizer import prepare_data
+import json
+import sys
+
 
 
 # ------------ CONFIG ------------
@@ -26,6 +29,28 @@ VAL_ROWS = 100000
 LOAD_EMBEDDINGS = None
 NUM_ROWS_TRAIN = 1000000
 # --------------------------------
+
+
+def set_config():
+    if len(sys.argv) == 2:
+        mode = sys.argv[1]
+        with open("config.json", "r") as fp:
+            config = json.load(fp)
+        if mode not in config:
+            logging.error("Invalid setup number!")
+        else:
+            EPOCHS = config[mode]["EPOCHS"]
+            LEARNING_RATE = config[mode]["LEARNING_RATE"]
+            BATCH_SIZE = config[mode]["BATCH_SIZE"]
+            MAX_TOKENCOUNT = config[mode]["MAX_TOKENCOUNT"]
+            TRUNCATING_METHOD = config[mode]["TRUNCATING_METHOD"]
+            MODEL_TRAIN = config[mode]["MODEL_TRAIN"]
+            SAVE_MODEL = config[mode]["SAVE_MODEL"]
+            PRELOAD_MODEL = config[mode]["PRELOAD_MODEL"]
+            VAL_ROWS = config[mode]["VAL_ROWS"]
+            LOAD_EMBEDDINGS = config[mode]["LOAD_EMBEDDINGS"]
+            NUM_ROWS_TRAIN = config[mode]["NUM_ROWS_TRAIN"]
+
 
 # Helper function for accuracy
 def flat_accuracy(predicitions, labels):
@@ -225,4 +250,5 @@ def train_model(epochs, learning_rate, batch_size, max_tokencount=510, truncatin
         if return_model:
             return model
 
-#train_model(EPOCHS, LEARNING_RATE, BATCH_SIZE, MAX_TOKENCOUNT, TRUNCATING_METHOD, MODEL_TRAIN, SAVE_MODEL, PRELOAD_MODEL, VAL_ROWS, LOAD_EMBEDDINGS, NUM_ROWS_TRAIN)
+# set_config()
+# train_model(EPOCHS, LEARNING_RATE, BATCH_SIZE, MAX_TOKENCOUNT, TRUNCATING_METHOD, MODEL_TRAIN, SAVE_MODEL, PRELOAD_MODEL, VAL_ROWS, LOAD_EMBEDDINGS, NUM_ROWS_TRAIN)
