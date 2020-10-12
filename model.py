@@ -37,8 +37,9 @@ def set_config():
         with open("config.json", "r") as fp:
             config = json.load(fp)
         if mode not in config:
-            logging.error("Invalid setup number!")
+            logging.error("Invalid config number!")
         else:
+            global EPOCHS, LEARNING_RATE, BATCH_SIZE, MAX_TOKENCOUNT, TRUNCATING_METHOD, MODEL_TRAIN, SAVE_MODEL, PRELOAD_MODEL, VAL_ROWS, LOAD_EMBEDDINGS, NUM_ROWS_TRAIN
             EPOCHS = config[mode]["EPOCHS"]
             LEARNING_RATE = config[mode]["LEARNING_RATE"]
             BATCH_SIZE = config[mode]["BATCH_SIZE"]
@@ -50,6 +51,10 @@ def set_config():
             VAL_ROWS = config[mode]["VAL_ROWS"]
             LOAD_EMBEDDINGS = config[mode]["LOAD_EMBEDDINGS"]
             NUM_ROWS_TRAIN = config[mode]["NUM_ROWS_TRAIN"]
+    elif len(sys.argv) == 1:
+        logging.warning("Config number missing!")
+    else:
+        logging.error("Invalid arguments!")
 
 
 # Helper function for accuracy
