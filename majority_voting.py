@@ -5,24 +5,30 @@ import pandas as pd
 
 
 
-def mv(df):
+def mv(df, debug=False):
     """
     Compute the majority voting for a given prediction of a BERT model and display accuracy and F1 after applying majority voting. 
     (The function does not change predictions for users with no predicted majority for one gender.)
 
     Parameters:
-        df(pd.DataFrame): Pandas DataFrame with ['userid', 'label', 'prediction'] as columns. There can only be one specific lable
+        df(pd.DataFrame): Pandas DataFrame with ['userid', 'label', 'prediction'] as columns. There can only be one specific label
         for all occurrences of a single userid in the dataframe.
+
+        debug(bool): Specifies whether debug messages should be on (True) or not (False). Default is False.
 
     Returns:
         Accuracy, F1 (male), F1 (female) as console output(!)
     '''
     """
-    logging.basicConfig(format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%m-%y %H:%M:%S', level=logging.INFO)
+    if debug:
+        logging.basicConfig(format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%m-%y %H:%M:%S', level=logging.DEBUG)
+    else:
+        logging.basicConfig(format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%m-%y %H:%M:%S', level=logging.INFO)
     log_starttime = datetime.datetime.now()
     logging.info("Computing majority voting..")
     ids = df["userid"].unique()
     if mv_verify(df, ids):
+        logging.debug("Input data verification successful.")
         voting = mv_compute(df, ids)
         logging.info("Computing majority voting stats..")
         logging.info("")
@@ -72,6 +78,9 @@ def mv_compute(df, ids):
         cnt_unchanged_users, 
         cnt_unchanged_users/len(ids))
     )
+    logging.debug("Overview (Prediction vs. Majority Voting):")
+    if logging.DEBUG >= logging.root.level:
+        print(df_mv)
     return df_mv
 
 
@@ -106,4 +115,7 @@ def mv_stats_f1(df, ids, key_pos):
 
 
 
-# mv(pd.DataFrame(data={"userid": [1, 1, 2, 1, 2], "label": [0, 0, 1, 0, 1], "prediction": [0, 0, 1, 0, 0]}))
+# Example where MV can improve accuracy for user 1 but skips user 2:
+# mv(pd.DataFrame(data={"userid": [1, 1, 2, 1, 2], "label": [0, 0, 1, 0, 1], "prediction": [0, 0, 1, 1, 0]}), True)
+# Example where MV gets corrupted input data, as user 1 has different label assignments:
+# mv(pd.DataFrame(data={"userid": [1, 1, 2, 1, 2], "label": [1, 0, 1, 0, 1], "prediction": [0, 0, 1, 1, 0]}), True)
