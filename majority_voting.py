@@ -31,15 +31,22 @@ def mv(df):
 def mv_compute(df, ids):
     df_mv = df.copy()
     df_mv["majority_voting"] = df["prediction"]
-    cnt_unchanged = 0
+    cnt_unchanged_users = 0
+    cnt_unchanged_reviews = 0
     for userid in ids:
         predictions = list(df.loc[df["userid"] == userid]["prediction"])
         if (predictions.count(0) != predictions.count(1)) and (len(predictions) > 1):
             mv = max(predictions, key=predictions.count)
             df_mv.loc[df_mv["userid"]==userid, "majority_voting"] = mv
         else:
-            cnt_unchanged += 1
-    logging.info("Done! Majority voting rejected {} time(s) ({:.2%}).".format(cnt_unchanged, cnt_unchanged/len(ids)))
+            cnt_unchanged_users += 1
+            cnt_unchanged_reviews += len(predictions)
+    logging.info("Done! Majority voting rejected for {} review(s) ({:.2%}) of {} user(s) ({:.2%}).".format(
+        cnt_unchanged_reviews, 
+        cnt_unchanged_reviews/df.shape[0], 
+        cnt_unchanged_users, 
+        cnt_unchanged_users/len(ids))
+    )
     return df_mv
 
 
@@ -60,5 +67,6 @@ def mv_stats_f1(df, ids, key_truth):
 
 
 
-df = pd.DataFrame(data={"userid": [1, 1, 2, 1, 2], "label": [0, 0, 1, 0, 1], "prediction": [0, 1, 1, 0, 0]})
+df = pd.DataFrame(data={"userid": [1, 1, 2, 1, 2], "label": [0, 0, 1, 0, 1], "prediction": [0, 0, 1, 0, 0]})
+print(df.shape[0])
 mv(df)
