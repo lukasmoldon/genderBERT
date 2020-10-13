@@ -83,7 +83,7 @@ def prepare_data(file_data, returnDF, max_tokencount=510, truncating_method="hea
     logging.info("{} reviews ({:.2%}) were oversized and truncated".format(cnt_oversized, cnt_oversized/len(data)))
 
     # padding and attention mask
-    data["att_mask"] = data["ReviewText"].map(lambda x: am(x, max_tokencount))
+    data["att_mask"] = data["ReviewText"].map(lambda x: am(x))
 
     log_endtime = datetime.datetime.now()
     log_runtime = (log_endtime - log_starttime)
@@ -106,5 +106,5 @@ def tokenize(text, tokenizer, max_tokencount, truncating_method):
     return tokens
 
 
-def am(tokens, max_tokencount):
+def am(tokens): # create attention mask
     return [int(token > 0) for token in tokens]
