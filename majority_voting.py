@@ -5,7 +5,6 @@ import pandas as pd
 
 
 
-
 def mv(df):
     logging.basicConfig(format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%m-%y %H:%M:%S', level=logging.INFO)
     log_starttime = datetime.datetime.now()
@@ -16,16 +15,17 @@ def mv(df):
     logging.info("")
     logging.info("----------------------------------")
     acc = mv_stats_acc(voting, ids)
-    logging.info("Accuracy = {}".format(acc))
+    logging.info("Accuracy = {:.4}".format(acc))
     f1_male = mv_stats_f1(voting, ids, 1)
-    logging.info("F1 male = {}".format(f1_male))
+    logging.info("F1 male = {:.4}".format(f1_male))
     f1_female = mv_stats_f1(voting, ids, 0)
-    logging.info("F1 female = {}".format(f1_female))
+    logging.info("F1 female = {:.4}".format(f1_female))
     logging.info("----------------------------------")
     logging.info("")
     log_endtime = datetime.datetime.now()
     log_runtime = (log_endtime - log_starttime)
     logging.info("Total runtime: " + str(log_runtime))
+
 
 
 def mv_compute(df, ids):
@@ -58,15 +58,25 @@ def mv_stats_acc(df, ids):
         truth = list(df.loc[df["userid"] == userid]["label"])[0]
         majority_voting = list(df.loc[df["userid"] == userid]["majority_voting"])
         cnt_pos += majority_voting.count(truth)
-        cnt_neg += len(majority_voting) - majority_voting.count(truth)
+        cnt_neg += majority_voting.count(1-truth)
     return cnt_pos/(cnt_neg+cnt_pos)
 
 
-def mv_stats_f1(df, ids, key_truth):
-    pass
+
+def mv_stats_f1(df, ids, key_pos):
+    TP = 0
+    FP = 0
+    FN = 0
+    for userid in ids:
+        truth = list(df.loc[df["userid"] == userid]["label"])[0]
+        majority_voting = list(df.loc[df["userid"] == userid]["majority_voting"])
+        if truth == key_pos:
+            TP += majority_voting.count(truth)
+            FN += majority_voting.count(1-truth)
+        else:
+            FP += majority_voting.count(1-truth)
+    return TP/(TP+0.5*(FP+FN))
 
 
 
-df = pd.DataFrame(data={"userid": [1, 1, 2, 1, 2], "label": [0, 0, 1, 0, 1], "prediction": [0, 0, 1, 0, 0]})
-print(df.shape[0])
-mv(df)
+# mv(pd.DataFrame(data={"userid": [1, 1, 2, 1, 2], "label": [0, 0, 1, 0, 1], "prediction": [0, 0, 1, 0, 0]}))
