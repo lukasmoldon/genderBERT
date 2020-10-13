@@ -3,7 +3,7 @@ import datetime
 from datetime import date, timedelta
 import pandas as pd
 import logging
-from transformers import BertTokenizer
+from transformers import AlbertTokenizer, BertTokenizer
 from tokenizers import BertWordPieceTokenizer
 
 cnt_oversized = 0
@@ -18,7 +18,7 @@ cnt_oversized = 0
 
 
 
-def prepare_data(file_data, returnDF, max_tokencount=510, truncating_method="head", file_results=None, num_rows=None):
+def prepare_data(file_data, returnDF, max_tokencount=510, truncating_method="head", file_results=None, num_rows=None, embedding_type="bert"):
 
     """
     Prepare the data for the BERT model.
@@ -41,6 +41,8 @@ def prepare_data(file_data, returnDF, max_tokencount=510, truncating_method="hea
 
         num_rows(int): Specifies whether input data should be limited to n rows or not (None).
 
+        embedding_type(bool): Specifies which tokenizer should be used (bert/albert).
+
     Returns:
         data(pandas.DataFrame): Returns dataframe of tokens if returnDF is set to true.
     '''
@@ -50,10 +52,11 @@ def prepare_data(file_data, returnDF, max_tokencount=510, truncating_method="hea
     log_starttime = datetime.datetime.now()
 
     # Load the data
+    names = ["UserId", "ReviewText", "Gender"] if "test" in file_data else ["Gender", "ReviewText"]
     if num_rows is None:
-        data = pd.read_csv(file_data, names=["Gender", "ReviewText"])
+        data = pd.read_csv(file_data, names=names)
     else:
-        data = pd.read_csv(file_data, nrows=num_rows, names=["Gender", "ReviewText"])
+        data = pd.read_csv(file_data, nrows=num_rows, names=names)
 
     # tag statistics
     logging.info("Total: {}".format(len(data)))
@@ -61,9 +64,12 @@ def prepare_data(file_data, returnDF, max_tokencount=510, truncating_method="hea
     logging.info("Female: {} ({:.2%})".format(len(data[data["Gender"] == 0]), len(data[data["Gender"] == 0])/len(data)))
 
     # load the tokenizer and selector for truncating oversized token lists
-    logging.info("Loading BERT tokenizer ...")
+    logging.info("Loading {} tokenizer ...".format(embedding_type))
     # OLD: tokenizer = BertTokenizer.from_pretrained("bert-base-uncased", do_lower_case=True)
-    tokenizer = BertWordPieceTokenizer("bert-base-uncased-vocab.txt", lowercase=True)
+    if embedding_type == "bert":
+        tokenizer = BertWordPieceTokenizer("bert-base-uncased-vocab.txt", lowercase=True)
+    else: 
+        tokenizer = AlbertTokenizer.from_pretrained("albert-base-v1", do_lower_case=True)
 
     max_tokencount = min(max_tokencount, 510)
     selector = {
@@ -76,7 +82,7 @@ def prepare_data(file_data, returnDF, max_tokencount=510, truncating_method="hea
     # tokenize, truncate oversized data (BERT is limited to 512 tokens) and apply padding
     logging.info("Applying tokenizer ...")
     logging.disable(logging.WARNING)
-    data["ReviewText"] = data["ReviewText"].map(lambda x: tokenize(x, tokenizer, max_tokencount, selector[truncating_method]))
+    data["ReviewText"] = data["ReviewText"].map(lambda x: tokenize(x, tokenizer, max_tokencount, selector[truncating_method], embedding_type))
     logging.disable(logging.DEBUG)
     logging.info("Done!")
     global cnt_oversized
@@ -96,8 +102,9 @@ def prepare_data(file_data, returnDF, max_tokencount=510, truncating_method="hea
         return data
 
 
-def tokenize(text, tokenizer, max_tokencount, truncating_method):
-    tokens = tokenizer.encode(text, add_special_tokens=True).ids
+def tokenize(text, tokenizer, max_tokencount, truncating_method, embedding_type):
+    tokens = tokenizer.encode(text, add_special_tokens=True)
+    tokens = tokens.ids if embedding_type == "bert" else tokens
     if len(tokens) > max_tokencount:
         global cnt_oversized
         cnt_oversized += 1

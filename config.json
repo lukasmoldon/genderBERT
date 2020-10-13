@@ -1,28 +1,41 @@
 {
     "1": {
-        "EPOCHS": 10,
+        "EPOCHS": 4,
         "LEARNING_RATE": 2e-5,
         "BATCH_SIZE": 16,
         "MAX_TOKENCOUNT": 128,
         "TRUNCATING_METHOD": "headtail",
-        "MODEL_TRAIN": 1,
+        "TOGGLE_PHASES": [true, true, false],
         "SAVE_MODEL": 1,
         "PRELOAD_MODEL": null,
-        "VAL_ROWS": 100000,
         "LOAD_EMBEDDINGS": null,
-        "NUM_ROWS_TRAIN": 1000000
+        "ROWS_COUNTS": [1000000,100000,null],
+        "MODEL_TYPE": "bert"
     },
     "2": {
-        "EPOCHS": 5,
+        "EPOCHS": 4,
         "LEARNING_RATE": 2e-5,
-        "BATCH_SIZE": 32,
-        "MAX_TOKENCOUNT": 64,
+        "BATCH_SIZE": 16,
+        "MAX_TOKENCOUNT": 128,
         "TRUNCATING_METHOD": "headtail",
-        "MODEL_TRAIN": 1,
+        "TOGGLE_PHASES": [true, true, false],
         "SAVE_MODEL": 1,
         "PRELOAD_MODEL": null,
-        "VAL_ROWS": 100000,
         "LOAD_EMBEDDINGS": null,
-        "NUM_ROWS_TRAIN": 1000000
+        "ROWS_COUNTS": [1000000,100000,null],
+        "MODEL_TYPE": "albert"
+    },
+    "3": {
+        "EPOCHS": 3,
+        "LEARNING_RATE": 2e-5,
+        "BATCH_SIZE": 16,
+        "MAX_TOKENCOUNT": 128,
+        "TRUNCATING_METHOD": "headtail",
+        "TOGGLE_PHASES": [true, false, true],
+        "SAVE_MODEL": 1,
+        "PRELOAD_MODEL": null,
+        "LOAD_EMBEDDINGS": null,
+        "ROWS_COUNTS": [100,100,100],
+        "MODEL_TYPE": "bert"
     }
 }
