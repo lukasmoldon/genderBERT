@@ -6,25 +6,50 @@ import pandas as pd
 
 
 def mv(df):
+    """
+    Compute the majority voting for a given prediction of a BERT model and display accuracy and F1 after applying majority voting. 
+    (The function does not change predictions for users with no predicted majority for one gender.)
+
+    Parameters:
+        df(pd.DataFrame): Pandas DataFrame with ['userid', 'label', 'prediction'] as columns. There can only be one specific lable
+        for all occurrences of a single userid in the dataframe.
+
+    Returns:
+        Accuracy, F1 (male), F1 (female) as console output(!)
+    '''
+    """
     logging.basicConfig(format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%m-%y %H:%M:%S', level=logging.INFO)
     log_starttime = datetime.datetime.now()
     logging.info("Computing majority voting..")
     ids = df["userid"].unique()
-    voting = mv_compute(df, ids)
-    logging.info("Computing majority voting stats..")
-    logging.info("")
-    logging.info("----------------------------------")
-    acc = mv_stats_acc(voting, ids)
-    logging.info("Accuracy = {:.4}".format(acc))
-    f1_male = mv_stats_f1(voting, ids, 1)
-    logging.info("F1 male = {:.4}".format(f1_male))
-    f1_female = mv_stats_f1(voting, ids, 0)
-    logging.info("F1 female = {:.4}".format(f1_female))
-    logging.info("----------------------------------")
-    logging.info("")
+    if mv_verify(df, ids):
+        voting = mv_compute(df, ids)
+        logging.info("Computing majority voting stats..")
+        logging.info("")
+        logging.info("----------------------------------")
+        acc = mv_stats_acc(voting, ids)
+        logging.info("Accuracy = {:.4}".format(acc))
+        f1_male = mv_stats_f1(voting, ids, 1)
+        logging.info("F1 male = {:.4}".format(f1_male))
+        f1_female = mv_stats_f1(voting, ids, 0)
+        logging.info("F1 female = {:.4}".format(f1_female))
+        logging.info("----------------------------------")
+        logging.info("")
+    else:
+        logging.fatal("Corrupted input data frame!")
     log_endtime = datetime.datetime.now()
     log_runtime = (log_endtime - log_starttime)
     logging.info("Total runtime: " + str(log_runtime))
+
+
+
+def mv_verify(df, ids):
+    status = True
+    for userid in ids:
+        if len(list(set(df.loc[df["userid"] == userid]["label"]))) > 1:
+            logging.error("No unique label assignment for user with ID {} !".format(userid))
+            status = False
+    return status
 
 
 
@@ -52,6 +77,7 @@ def mv_compute(df, ids):
 
 
 def mv_stats_acc(df, ids):
+    # see https://en.wikipedia.org/wiki/Accuracy_and_precision
     cnt_pos = 0
     cnt_neg = 0
     for userid in ids:
@@ -64,6 +90,7 @@ def mv_stats_acc(df, ids):
 
 
 def mv_stats_f1(df, ids, key_pos):
+    # see https://en.wikipedia.org/wiki/F1_score
     TP = 0
     FP = 0
     FN = 0
