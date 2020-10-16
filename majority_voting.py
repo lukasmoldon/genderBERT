@@ -27,22 +27,24 @@ def mv(df, debug=False):
     log_starttime = datetime.datetime.now()
     logging.info("Computing majority voting..")
     ids = df["userid"].unique()
-    if mv_verify(df, ids):
-        logging.debug("Input data verification successful.")
-        voting = mv_compute(df, ids)
-        logging.info("Computing majority voting stats..")
-        logging.info("")
-        logging.info("----------------------------------")
-        acc = mv_stats_acc(voting, ids)
-        logging.info("Accuracy = {:.4}".format(acc))
-        f1_male = mv_stats_f1(voting, ids, 1)
-        logging.info("F1 male = {:.4}".format(f1_male))
-        f1_female = mv_stats_f1(voting, ids, 0)
-        logging.info("F1 female = {:.4}".format(f1_female))
-        logging.info("----------------------------------")
-        logging.info("")
+    res_verify = mv_verify(df, ids)
+    if res_verify == 0:
+        logging.debug("No inconsistencies in input data (unique label assignment)")
     else:
-        logging.fatal("Corrupted input data frame!")
+        logging.warning("Found {} user(s) ({:.2%}) with inconsistencies in input data (no unique label assignment)".format(res_verify, res_verify/len(ids)))
+    logging.debug("Input data verification successful.")
+    voting = mv_compute(df, ids)
+    logging.info("Computing majority voting stats..")
+    logging.info("")
+    logging.info("----------------------------------")
+    acc = mv_stats_acc(voting)
+    logging.info("Accuracy = {:.4}".format(acc))
+    f1_male = mv_stats_f1(voting, 1)
+    logging.info("F1 male = {:.4}".format(f1_male))
+    f1_female = mv_stats_f1(voting, 0)
+    logging.info("F1 female = {:.4}".format(f1_female))
+    logging.info("----------------------------------")
+    logging.info("")
     log_endtime = datetime.datetime.now()
     log_runtime = (log_endtime - log_starttime)
     logging.info("Total runtime: " + str(log_runtime))
@@ -50,12 +52,12 @@ def mv(df, debug=False):
 
 
 def mv_verify(df, ids):
-    status = True
+    cnt_inconsistencies = 0
     for userid in ids:
         if len(list(set(df.loc[df["userid"] == userid]["label"]))) > 1:
-            logging.error("No unique label assignment for user with ID {} !".format(userid))
-            status = False
-    return status
+            logging.debug("No unique label assignment for user with ID {} !".format(userid))
+            cnt_inconsistencies += 1
+    return cnt_inconsistencies
 
 
 
@@ -85,32 +87,23 @@ def mv_compute(df, ids):
 
 
 
-def mv_stats_acc(df, ids):
+def mv_stats_acc(df):
     # see https://en.wikipedia.org/wiki/Accuracy_and_precision
-    cnt_pos = 0
-    cnt_neg = 0
-    for userid in ids:
-        truth = list(df.loc[df["userid"] == userid]["label"])[0]
-        majority_voting = list(df.loc[df["userid"] == userid]["majority_voting"])
-        cnt_pos += majority_voting.count(truth)
-        cnt_neg += majority_voting.count(1-truth)
+    males = list(df.loc[df["label"] == 1]["majority_voting"])
+    females = list(df.loc[df["label"] == 0]["majority_voting"])
+    cnt_pos = males.count(1) + females.count(0) 
+    cnt_neg = males.count(0) + females.count(1)
     return cnt_pos/(cnt_neg+cnt_pos)
 
 
 
-def mv_stats_f1(df, ids, key_pos):
+def mv_stats_f1(df, key_pos):
     # see https://en.wikipedia.org/wiki/F1_score
-    TP = 0
-    FP = 0
-    FN = 0
-    for userid in ids:
-        truth = list(df.loc[df["userid"] == userid]["label"])[0]
-        majority_voting = list(df.loc[df["userid"] == userid]["majority_voting"])
-        if truth == key_pos:
-            TP += majority_voting.count(truth)
-            FN += majority_voting.count(1-truth)
-        else:
-            FP += majority_voting.count(1-truth)
+    pos = list(df.loc[df["label"] == key_pos]["majority_voting"])
+    neg = list(df.loc[df["label"] == (1-key_pos)]["majority_voting"])
+    TP = pos.count(key_pos)
+    FP = neg.count(key_pos)
+    FN = pos.count(1-key_pos)
     return TP/(TP+0.5*(FP+FN))
 
 
