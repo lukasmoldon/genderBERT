@@ -25,12 +25,159 @@ BATCH_SIZE = 16
 MAX_TOKENCOUNT = 128
 TRUNCATING_METHOD = "headtail"
 TOGGLE_PHASES = [True, True, False]
-SAVE_MODEL = True
+SAVE_MODEL = None
 PRELOAD_MODEL = None
 LOAD_EMBEDDINGS = None
 ROWS_COUNTS = [100, 10, 10]
 MODEL_TYPE = "bert"
 # --------------------------------
+
+def train_model(epochs, learning_rate, batch_size, max_tokencount=510, truncating_method="head", toggle_phases=[True, True, False], save_model=True,
+                preload_model=None, load_embeddings=None, rows_counts=[None, None, None], model_type="bert",
+                return_model=False, return_stats=False):
+    """
+    Run main script for model training/validation/testing.
+
+    Parameters:
+        epochs(int): Number of epochs for training.
+
+        learning_rate(int): Learning rate of the model.
+
+        batch_size(int): Batch size.
+
+        max_tokencount(int): Maximum amount of words/tokens in [1,510] (BERT is limited to 512 including CLS and SEP) for a single review, 
+        truncating gets applied if text length exceeds this timit.
+
+        truncating_method(string): Specifies how to truncate an oversized list of tokens using a method from ["head", "tail", "headtail"].
+
+        toggle_phases([bool]): Specifies which phases should be run ([Training, Validation, Testing]).
+
+        save_model(string): Saves model after each epoch to the given path, no saving if None.
+
+        preload_model(string): Preload model with given path. Train new model if None.
+
+        load_embeddings(string): Preload embeddings from given path. Create new embeddings if None.
+
+        rows_counts([int]): Specifies how many data entries are used for training/validation/testing ([Training, Validation, Testing]).
+
+        model_type(string): Specifies type of model (bert/albert).
+
+        return_model(bool): Returns final model if set to true.
+
+        return_stats(bool): Returns statistics of accuracy and loss for each epoch in dict format.
+
+    Returns:
+        model(BertForSequenceClassification): Returns trained model if return_model is set to true.
+    '''
+    """
+    logging.basicConfig(format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%m-%y %H:%M:%S', level=logging.INFO)
+    log_starttime = datetime.datetime.now()
+    # Load tokenized data
+    if load_embeddings is not None:
+        logging.info("Load train/validation data ...")
+        # Todo: implement
+        exit()
+    else:
+        logging.info("Tokenize train/validation data ...")
+        dataframes = [None, None, None]
+        paths = ["../datasets/amazon/User_level_train.csv", "../datasets/amazon/User_level_validation.csv", "../datasets/amazon/User_level_test_with_id.csv"]
+        for i in range(3):
+            if toggle_phases[i]:
+                if rows_counts[i] is not None:
+                    dataframes[i] = prepare_data(paths[i], True, num_rows=rows_counts[i], max_tokencount=max_tokencount, truncating_method=truncating_method, embedding_type=model_type)
+                else:
+                    dataframes[i] = prepare_data(paths[i], True, max_tokencount=max_tokencount, embedding_type=model_type)
+    #test_df = pd.read_csv("test_tokenized.csv")
+    #test_df["ReviewText"] = test_df["ReviewText"].map(ast.literal_eval)
+    #test_df["att_mask"] = test_df["att_mask"].map(ast.literal_eval)
+    #dataframes[2] = test_df
+    train_df, val_df, test_df = dataframes
+    # Create tensors from loaded data
+    logging.info("Create tensors ...")
+    train_dataloader = create_dataloader(train_df, batch_size)
+    val_dataloader = create_dataloader(val_df, batch_size)
+    test_dataloader = create_dataloader(test_df, 512)
+
+    # Create/load model
+    if preload_model is None:
+        model_init = {"bert": (BertForSequenceClassification, "bert-base-uncased"), 
+                      "albert": (AlbertForSequenceClassification, "albert-base-v1")}
+        logging.info("Create new model ...")
+        model = model_init[model_type][0].from_pretrained(
+            model_init[model_type][1],
+            attention_probs_dropout_prob=0.2,
+            num_labels=2,
+            output_attentions=False,
+            output_hidden_states=False,
+        )
+    else:
+        model_init = {"bert": (BertForSequenceClassification, "bert-base-uncased"), 
+                      "albert": (AlbertForSequenceClassification, "albert-base-v1")}
+        logging.info("Load pretrained model ...")
+        model = model_init[model_type][0].from_pretrained(
+            preload_model,
+            attention_probs_dropout_prob=0.2,
+            num_labels=2,
+            output_attentions=False,
+            output_hidden_states=False
+        )
+
+    # Set usage of GPU or CPU
+    if torch.cuda.is_available():
+        device = torch.device("cuda:0")
+        model.cuda()
+        logging.info("Use GPU: {}".format(torch.cuda.get_device_name(0)))
+    else:
+        device = torch.device("cpu")
+        logging.warning("No GPU available, use CPU instead.")
+    if toggle_phases[0]:
+        optimizer = AdamW(model.parameters(),
+                        lr=learning_rate,
+                        eps=1e-8)
+        scheduler = get_linear_schedule_with_warmup(optimizer,
+                                                    num_warmup_steps=0,
+                                                    num_training_steps=len(train_dataloader) * epochs)
+                                                
+    # Train model
+    seed_val = 42
+    random.seed(seed_val)
+    # np.random_seed(seed_val)
+    torch.manual_seed(seed_val)
+    torch.cuda.manual_seed_all(seed_val)
+    loss_values = []
+    stats = {}
+
+    # TODO: Save best model
+    for epoch_i in range(epochs):
+        logging.info("-------- Epoch {} / {} --------".format(epoch_i + 1, epochs))
+        if toggle_phases[0]:
+            loss, acc = train_epoch(model, train_dataloader, optimizer, device, scheduler)
+            stats[str(epoch_i)] = {"loss": loss, "accuracy": acc}
+            if save_model is not None:
+                logging.info("Save model...")
+                model.save_pretrained("{}_epoch_{}".format(save_model, epoch_i+1))
+        # ---VALIDATION--- 
+        if toggle_phases[1]:
+            acc = eval_model(model, val_dataloader, device)
+            #stats[str(epoch_i)]["accuracy"] = acc
+    # ---TESTING ---
+    if toggle_phases[2]:
+        acc = test_model(model, test_dataloader, device)
+        #stats[str(epoch_i)]["accuracy (Non-MV)"] = acc
+
+    logging.info("Training complete!")
+    log_endtime = datetime.datetime.now()
+    log_runtime = (log_endtime - log_starttime)
+    logging.info("Total runtime: " + str(log_runtime))
+
+    if return_stats:
+        if return_model:
+            return model, stats
+        else:
+            return stats
+    else:
+        if return_model:
+            return model
 
 
 def set_config():
@@ -183,145 +330,5 @@ def test_model(model, data_loader, device):
     return non_mv_accuracy   
 
      
-def train_model(epochs, learning_rate, batch_size, max_tokencount=510, truncating_method="head", toggle_phases=[True, True, False], save_model=True,
-                preload_model=None, load_embeddings=None, rows_counts=[None, None, None], model_type="bert",
-                return_model=False, return_stats=False):
-    """
-    Run main script for model training/validation/testing.
-
-    Parameters:
-        epochs(int): Number of epochs for training.
-
-        learning_rate(int): Learning rate of the model.
-
-        batch_size(int): Batch size.
-
-        max_tokencount(int): Maximum amount of words/tokens in [1,510] (BERT is limited to 512 including CLS and SEP) for a single review, 
-        truncating gets applied if text length exceeds this timit.
-
-        truncating_method(string): Specifies how to truncate an oversized list of tokens using a method from ["head", "tail", "headtail"].
-
-        toggle_phases([bool]): Specifies which phases should be run ([Training, Validation, Testing]).
-
-        save_model(bool): Saves model after each epoch if true.
-
-        preload_model(string): Preload model with given path. Train new model if None.
-
-        load_embeddings(string): Preload embeddings from given path. Create new embeddings if None.
-
-        rows_counts([int]): Specifies how many data entries are used for training/validation/testing ([Training, Validation, Testing]).
-
-        model_type(string): Specifies type of model (bert/albert).
-
-        return_model(bool): Returns final model if set to true.
-
-        return_stats(bool): Returns statistics of accuracy and loss for each epoch in dict format.
-
-    Returns:
-        model(BertForSequenceClassification): Returns trained model if return_model is set to true.
-    '''
-    """
-    logging.basicConfig(format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%m-%y %H:%M:%S', level=logging.INFO)
-    log_starttime = datetime.datetime.now()
-    # Load tokenized data
-    if load_embeddings is not None:
-        logging.info("Load train/validation data ...")
-        # Todo: implement
-        exit()
-    else:
-        logging.info("Tokenize train/validation data ...")
-        dataframes = [None, None, None]
-        paths = ["../datasets/amazon/User_level_train.csv", "../datasets/amazon/User_level_validation.csv", "../datasets/amazon/User_level_test_with_id.csv"]
-        for i in range(3):
-            if toggle_phases[i]:
-                if rows_counts[i] is not None:
-                    dataframes[i] = prepare_data(paths[i], True, num_rows=rows_counts[i], max_tokencount=max_tokencount, truncating_method=truncating_method, embedding_type=model_type)
-                else:
-                    dataframes[i] = prepare_data(paths[i], True, max_tokencount=max_tokencount, embedding_type=model_type)
-    train_df, val_df, test_df = dataframes
-    # Create tensors from loaded data
-    logging.info("Create tensors ...")
-    train_dataloader = create_dataloader(train_df, batch_size)
-    val_dataloader = create_dataloader(val_df, batch_size)
-    test_dataloader = create_dataloader(test_df, batch_size)
-
-    # Create/load model
-    if preload_model is None:
-        model_init = {"bert": (BertForSequenceClassification, "bert-base-uncased"), 
-                      "albert": (AlbertForSequenceClassification, "albert-base-v1")}
-        logging.info("Create new model ...")
-        model = model_init[model_type][0].from_pretrained(
-            model_init[model_type][1],
-            num_labels=2,
-            output_attentions=False,
-            output_hidden_states=False
-        )
-    else:
-        logging.info("Load pretrained model ...")
-        model = BertForSequenceClassification.from_pretrained(
-            preload_model,
-            num_labels=2,
-            output_attentions=False,
-            output_hidden_states=False
-        )
-
-    # Set usage of GPU or CPU
-    if torch.cuda.is_available():
-        device = torch.device("cuda:0")
-        model.cuda()
-        logging.info("Use GPU: {}".format(torch.cuda.get_device_name(0)))
-    else:
-        device = torch.device("cpu")
-        logging.warning("No GPU available, use CPU instead.")
-    if toggle_phases[0]:
-        optimizer = AdamW(model.parameters(),
-                        lr=learning_rate,
-                        eps=1e-8)
-        scheduler = get_linear_schedule_with_warmup(optimizer,
-                                                    num_warmup_steps=0,
-                                                    num_training_steps=len(train_dataloader) * epochs)
-                                                
-    # Train model
-    seed_val = 42
-    random.seed(seed_val)
-    # np.random_seed(seed_val)
-    torch.manual_seed(seed_val)
-    torch.cuda.manual_seed_all(seed_val)
-    loss_values = []
-    stats = {}
-
-    # TODO: Save best model
-    for epoch_i in range(epochs):
-        logging.info("-------- Epoch {} / {} --------".format(epoch_i + 1, epochs))
-        if toggle_phases[0]:
-            loss, acc = train_epoch(model, train_dataloader, optimizer, device, scheduler)
-            stats[str(epoch_i)] = {"loss": loss, "accuracy": acc}
-            if save_model:
-                logging.info("Save model...")
-                model.save_pretrained("genderBERT_epoch_{}_V4".format(epoch_i))
-        # ---VALIDATION--- 
-        if toggle_phases[1]:
-            acc = eval_model(model, val_dataloader, device)
-            stats[str(epoch_i)]["accuracy"] = acc
-    # ---TESTING ---
-    if toggle_phases[2]:
-        acc = test_model(model, test_dataloader, device)
-        stats[str(epoch_i)]["accuracy (Non-MV)"] = acc
-
-    logging.info("Training complete!")
-    log_endtime = datetime.datetime.now()
-    log_runtime = (log_endtime - log_starttime)
-    logging.info("Total runtime: " + str(log_runtime))
-
-    if return_stats:
-        if return_model:
-            return model, stats
-        else:
-            return stats
-    else:
-        if return_model:
-            return model
-
-
-#set_config()
-#train_model(EPOCHS, LEARNING_RATE, BATCH_SIZE, MAX_TOKENCOUNT, TRUNCATING_METHOD, TOGGLE_PHASES, SAVE_MODEL, PRELOAD_MODEL, LOAD_EMBEDDINGS, ROWS_COUNTS, MODEL_TYPE)
+set_config()
+train_model(EPOCHS, LEARNING_RATE, BATCH_SIZE, MAX_TOKENCOUNT, TRUNCATING_METHOD, TOGGLE_PHASES, SAVE_MODEL, PRELOAD_MODEL, LOAD_EMBEDDINGS, ROWS_COUNTS, MODEL_TYPE)

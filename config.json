@@ -6,7 +6,7 @@
         "MAX_TOKENCOUNT": 128,
         "TRUNCATING_METHOD": "headtail",
         "TOGGLE_PHASES": [true, true, false],
-        "SAVE_MODEL": 1,
+        "SAVE_MODEL": null,
         "PRELOAD_MODEL": null,
         "LOAD_EMBEDDINGS": null,
         "ROWS_COUNTS": [1000000,100000,null],
@@ -19,7 +19,7 @@
         "MAX_TOKENCOUNT": 128,
         "TRUNCATING_METHOD": "headtail",
         "TOGGLE_PHASES": [true, true, false],
-        "SAVE_MODEL": 1,
+        "SAVE_MODEL": null,
         "PRELOAD_MODEL": null,
         "LOAD_EMBEDDINGS": null,
         "ROWS_COUNTS": [1000000,100000,null],
@@ -27,15 +27,42 @@
     },
     "3": {
         "EPOCHS": 3,
+        "LEARNING_RATE": 1e-5,
+        "BATCH_SIZE": 16,
+        "MAX_TOKENCOUNT": 128,
+        "TRUNCATING_METHOD": "headtail",
+        "TOGGLE_PHASES": [true, true, false],
+        "SAVE_MODEL": "test",
+        "PRELOAD_MODEL": null,
+        "LOAD_EMBEDDINGS": null,
+        "ROWS_COUNTS": [100000,100000 ,null],
+        "MODEL_TYPE": "bert"
+    },
+    "4": {
+        "EPOCHS": 3,
         "LEARNING_RATE": 2e-5,
         "BATCH_SIZE": 16,
         "MAX_TOKENCOUNT": 128,
         "TRUNCATING_METHOD": "headtail",
-        "TOGGLE_PHASES": [true, false, true],
-        "SAVE_MODEL": 1,
+        "TOGGLE_PHASES": [true, true, false],
+        "SAVE_MODEL": "test",
         "PRELOAD_MODEL": null,
         "LOAD_EMBEDDINGS": null,
-        "ROWS_COUNTS": [100,100,100],
+        "ROWS_COUNTS": [100000,100000
+            ,null],
+        "MODEL_TYPE": "bert"
+    },
+    "5": {
+        "EPOCHS": 3,
+        "LEARNING_RATE": 2e-5,
+        "BATCH_SIZE": 16,
+        "MAX_TOKENCOUNT": 128,
+        "TRUNCATING_METHOD": "headtail",
+        "TOGGLE_PHASES": [false, false, true],
+        "SAVE_MODEL": null,
+        "PRELOAD_MODEL": "million_epoch3.model",
+        "LOAD_EMBEDDINGS": null,
+        "ROWS_COUNTS": [10000,null,null],
         "MODEL_TYPE": "bert"
     }
 }
