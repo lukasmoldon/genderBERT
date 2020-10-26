@@ -15,6 +15,7 @@ import json
 import sys
 from sklearn import preprocessing
 from majority_voting import mv
+from majority_voting import mv_stats_f1
 
 
 
@@ -96,32 +97,32 @@ def train_model(epochs, learning_rate, batch_size, max_tokencount=510, truncatin
     logging.info("Create tensors ...")
     train_dataloader = create_dataloader(train_df, batch_size)
     val_dataloader = create_dataloader(val_df, batch_size)
-    test_dataloader = create_dataloader(test_df, 512)
+    test_dataloader = create_dataloader(test_df, 256)
 
     # Create/load model
+    model_init = {"bert": (BertForSequenceClassification, "bert-base-uncased"), 
+                      "albert": (AlbertForSequenceClassification, "albert-base-v1"),
+                      "sentiment_bert": (BertForSequenceClassification, "nlptown/bert-base-multilingual-uncased-sentiment")}
     if preload_model is None:
-        model_init = {"bert": (BertForSequenceClassification, "bert-base-uncased"), 
-                      "albert": (AlbertForSequenceClassification, "albert-base-v1")}
         logging.info("Create new model ...")
-        model = model_init[model_type][0].from_pretrained(
-            model_init[model_type][1],
-            attention_probs_dropout_prob=0.2,
-            num_labels=2,
-            output_attentions=False,
-            output_hidden_states=False,
-        )
+        preload_model = model_init[model_type][1]
     else:
-        model_init = {"bert": (BertForSequenceClassification, "bert-base-uncased"), 
-                      "albert": (AlbertForSequenceClassification, "albert-base-v1")}
         logging.info("Load pretrained model ...")
-        model = model_init[model_type][0].from_pretrained(
-            preload_model,
-            attention_probs_dropout_prob=0.2,
-            num_labels=2,
-            output_attentions=False,
-            output_hidden_states=False
-        )
+    if model_type == "sentiment_bert":
+        num_labels = 5
+    else:
+        num_labels = 2
+    model = model_init[model_type][0].from_pretrained(
+        preload_model,
+        attention_probs_dropout_prob=0.2,
+        num_labels=num_labels,
+        output_attentions=False,
+        output_hidden_states=False,
+    )
 
+    if model_type == "sentiment_bert":
+        model.classifier = torch.nn.Linear(model.classifier.in_features, 2)
+        model.num_labels = 2
     # Set usage of GPU or CPU
     if torch.cuda.is_available():
         device = torch.device("cuda:0")
@@ -325,10 +326,14 @@ def test_model(model, data_loader, device):
             pred_list += predicted.tolist()
     df = pd.DataFrame({"userid": user_id_list, "label": label_list, "prediction": pred_list})
     non_mv_accuracy = tmp_eval_acc/steps
-    logging.info("Accuracy (Non-MV): {0:.2f}".format(non_mv_accuracy))
+    logging.info("Accuracy (Non-MV): {:.4}".format(non_mv_accuracy))
+    f1_male = mv_stats_f1(df, 1, pred_label="prediction")
+    logging.info("F1 male = {:.4}".format(f1_male))
+    f1_female = mv_stats_f1(df, 0, pred_label="prediction")
+    logging.info("F1 female = {:.4}".format(f1_female))
     mv(df)
     return non_mv_accuracy   
 
      
-#set_config()
-#train_model(EPOCHS, LEARNING_RATE, BATCH_SIZE, MAX_TOKENCOUNT, TRUNCATING_METHOD, TOGGLE_PHASES, SAVE_MODEL, PRELOAD_MODEL, LOAD_EMBEDDINGS, ROWS_COUNTS, MODEL_TYPE)
+set_config()
+train_model(EPOCHS, LEARNING_RATE, BATCH_SIZE, MAX_TOKENCOUNT, TRUNCATING_METHOD, TOGGLE_PHASES, SAVE_MODEL, PRELOAD_MODEL, LOAD_EMBEDDINGS, ROWS_COUNTS, MODEL_TYPE)

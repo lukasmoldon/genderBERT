@@ -68,8 +68,10 @@ def prepare_data(file_data, returnDF, max_tokencount=510, truncating_method="hea
     # OLD: tokenizer = BertTokenizer.from_pretrained("bert-base-uncased", do_lower_case=True)
     if embedding_type == "bert":
         tokenizer = BertWordPieceTokenizer("bert-base-uncased-vocab.txt", lowercase=True)
-    else: 
+    elif embedding_type == "albert": 
         tokenizer = AlbertTokenizer.from_pretrained("albert-base-v1", do_lower_case=True)
+    else:
+        tokenizer = BertTokenizer.from_pretrained("nlptown/bert-base-multilingual-uncased-sentiment", do_lower_case=True)
 
     max_tokencount = min(max_tokencount, 510)
     selector = {
