@@ -97,10 +97,10 @@ def mv_stats_acc(df):
 
 
 
-def mv_stats_f1(df, key_pos):
+def mv_stats_f1(df, key_pos, pred_label="majority_voting"):
     # see https://en.wikipedia.org/wiki/F1_score
-    pos = list(df.loc[df["label"] == key_pos]["majority_voting"])
-    neg = list(df.loc[df["label"] == (1-key_pos)]["majority_voting"])
+    pos = list(df.loc[df["label"] == key_pos][pred_label])
+    neg = list(df.loc[df["label"] == (1-key_pos)][pred_label])
     TP = pos.count(key_pos)
     FP = neg.count(key_pos)
     FN = pos.count(1-key_pos)
