@@ -9,7 +9,7 @@
         "SAVE_MODEL": null,
         "PRELOAD_MODEL": null,
         "LOAD_EMBEDDINGS": null,
-        "ROWS_COUNTS": [1000000,100000,null],
+        "ROWS_COUNTS": [1000000, 100000, null],
         "MODEL_TYPE": "bert"
     },
     "2": {
@@ -22,21 +22,22 @@
         "SAVE_MODEL": null,
         "PRELOAD_MODEL": null,
         "LOAD_EMBEDDINGS": null,
-        "ROWS_COUNTS": [1000000,100000,null],
+        "ROWS_COUNTS": [1000000, 100000, null],
         "MODEL_TYPE": "albert"
     },
     "3": {
-        "EPOCHS": 3,
-        "LEARNING_RATE": 1e-5,
-        "BATCH_SIZE": 16,
-        "MAX_TOKENCOUNT": 128,
+        "EPOCHS": 1,
+        "LEARNING_RATE": 2e-5,
+        "BATCH_SIZE": 2,
+        "MAX_TOKENCOUNT": 16,
         "TRUNCATING_METHOD": "headtail",
-        "TOGGLE_PHASES": [true, true, false],
-        "SAVE_MODEL": "test",
+        "TOGGLE_PHASES": [true, true, true],
+        "SAVE_MODEL": null,
         "PRELOAD_MODEL": null,
         "LOAD_EMBEDDINGS": null,
-        "ROWS_COUNTS": [100000,100000 ,null],
-        "MODEL_TYPE": "bert"
+        "ROWS_COUNTS": [2, 2, 2],
+        "MODEL_TYPE": "roberta",
+        "DATASET_TYPE": "amazon"
     },
     "4": {
         "EPOCHS": 3,
@@ -44,13 +45,13 @@
         "BATCH_SIZE": 16,
         "MAX_TOKENCOUNT": 128,
         "TRUNCATING_METHOD": "headtail",
-        "TOGGLE_PHASES": [true, true, false],
-        "SAVE_MODEL": "test",
+        "TOGGLE_PHASES": [true, false, true],
+        "SAVE_MODEL": "stackover_bert",
         "PRELOAD_MODEL": null,
         "LOAD_EMBEDDINGS": null,
-        "ROWS_COUNTS": [100000,100000
-            ,null],
-        "MODEL_TYPE": "bert"
+        "ROWS_COUNTS": [10000, null, 10000],
+        "MODEL_TYPE": "bert",
+        "DATASET_TYPE": "stackover"
     },
     "5": {
         "EPOCHS": 3,
@@ -62,7 +63,7 @@
         "SAVE_MODEL": null,
         "PRELOAD_MODEL": "million_epoch3.model",
         "LOAD_EMBEDDINGS": null,
-        "ROWS_COUNTS": [10000,null,null],
+        "ROWS_COUNTS": [10000, null, null],
         "MODEL_TYPE": "bert"
     }
 }

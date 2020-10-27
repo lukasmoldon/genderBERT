@@ -3,7 +3,7 @@ import datetime
 from datetime import date, timedelta
 import pandas as pd
 import logging
-from transformers import AlbertTokenizer, BertTokenizer
+from transformers import AlbertTokenizer, BertTokenizer, GPT2Tokenizer, RobertaTokenizer
 from tokenizers import BertWordPieceTokenizer
 
 cnt_oversized = 0
@@ -18,7 +18,7 @@ cnt_oversized = 0
 
 
 
-def prepare_data(file_data, returnDF, max_tokencount=510, truncating_method="head", file_results=None, num_rows=None, embedding_type="bert"):
+def prepare_data(file_data, returnDF, max_tokencount=510, truncating_method="head", file_results=None, num_rows=None, embedding_type="bert", dataset_type="amazon"):
 
     """
     Prepare the data for the BERT model.
@@ -43,6 +43,8 @@ def prepare_data(file_data, returnDF, max_tokencount=510, truncating_method="hea
 
         embedding_type(bool): Specifies which tokenizer should be used (bert/albert).
 
+        dataset_type(string): Specifies which dataset to use (amazon/reddit/stackover)
+
     Returns:
         data(pandas.DataFrame): Returns dataframe of tokens if returnDF is set to true.
     '''
@@ -50,14 +52,18 @@ def prepare_data(file_data, returnDF, max_tokencount=510, truncating_method="hea
 
     logging.basicConfig(format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%m-%y %H:%M:%S', level=logging.INFO)
     log_starttime = datetime.datetime.now()
-
     # Load the data
-    names = ["UserId", "ReviewText", "Gender"] if "test" in file_data else ["Gender", "ReviewText"]
+    if dataset_type == "amazon":
+        names = ["UserId", "ReviewText", "Gender"] if "test" in file_data else ["Gender", "ReviewText"]
+    else:
+        names = ["UserId", "Gender", "ReviewText"] if "test" in file_data else ["Gender", "ReviewText"]
     if num_rows is None:
         data = pd.read_csv(file_data, names=names)
     else:
         data = pd.read_csv(file_data, nrows=num_rows, names=names)
-
+    # Swap columns
+    if dataset_type != "amazon":
+        data = data.reindex(columns=["UserId", "ReviewText", "Gender"]) if "test" in file_data else data
     # tag statistics
     logging.info("Total: {}".format(len(data)))
     logging.info("Male: {} ({:.2%})".format(len(data[data["Gender"] == 1]), len(data[data["Gender"] == 1])/len(data)))
@@ -68,9 +74,15 @@ def prepare_data(file_data, returnDF, max_tokencount=510, truncating_method="hea
     # OLD: tokenizer = BertTokenizer.from_pretrained("bert-base-uncased", do_lower_case=True)
     if embedding_type == "bert":
         tokenizer = BertWordPieceTokenizer("bert-base-uncased-vocab.txt", lowercase=True)
-    else: 
+    elif embedding_type == "albert": 
         tokenizer = AlbertTokenizer.from_pretrained("albert-base-v1", do_lower_case=True)
-
+    elif embedding_type == "gpt2":
+        tokenizer = GPT2Tokenizer.from_pretrained("gpt2", do_lower_case=True)
+    elif embedding_type == "roberta":
+        tokenizer = RobertaTokenizer.from_pretrained("roberta-base", do_lower_case=True)
+    else:
+        logging.error("Unknown embedding type!")
+        exit()
     max_tokencount = min(max_tokencount, 510)
     selector = {
         "head": (lambda x: x[:max_tokencount+1] + x[-1:]),

@@ -3,7 +3,7 @@ import datetime
 from datetime import date, timedelta
 import torch
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
-from transformers import BertForSequenceClassification, AlbertForSequenceClassification, AdamW, BertConfig
+from transformers import BertForSequenceClassification, AlbertForSequenceClassification, AdamW, BertConfig, AutoModelForSequenceClassification
 from transformers import get_linear_schedule_with_warmup
 import pandas as pd
 import ast
@@ -30,10 +30,13 @@ PRELOAD_MODEL = None
 LOAD_EMBEDDINGS = None
 ROWS_COUNTS = [100, 10, 10]
 MODEL_TYPE = "bert"
+PATHS = {"amazon": ["../datasets/amazon/User_level_train.csv", "../datasets/amazon/User_level_validation.csv", "../datasets/amazon/User_level_test_with_id.csv"],
+        "stackover": ["../datasets/stackover/train_so.csv", "../datasets/stackover/validation_so.csv", "../datasets/stackover/test_so.csv"],
+        "reddit": ["../datasets/reddit/train_reddit.csv", "../datasets/reddit/validation_reddit.csv", "../datasets/reddit/test_reddit.csv"]}
 # --------------------------------
 
 def train_model(epochs, learning_rate, batch_size, max_tokencount=510, truncating_method="head", toggle_phases=[True, True, False], save_model=True,
-                preload_model=None, load_embeddings=None, rows_counts=[None, None, None], model_type="bert",
+                preload_model=None, load_embeddings=None, rows_counts=[None, None, None], model_type="bert", dataset_type="amazon",
                 return_model=False, return_stats=False):
     """
     Run main script for model training/validation/testing.
@@ -80,13 +83,13 @@ def train_model(epochs, learning_rate, batch_size, max_tokencount=510, truncatin
     else:
         logging.info("Tokenize train/validation data ...")
         dataframes = [None, None, None]
-        paths = ["../datasets/amazon/User_level_train.csv", "../datasets/amazon/User_level_validation.csv", "../datasets/amazon/User_level_test_with_id.csv"]
+        paths = PATHS[dataset_type]
         for i in range(3):
             if toggle_phases[i]:
                 if rows_counts[i] is not None:
-                    dataframes[i] = prepare_data(paths[i], True, num_rows=rows_counts[i], max_tokencount=max_tokencount, truncating_method=truncating_method, embedding_type=model_type)
+                    dataframes[i] = prepare_data(paths[i], True, num_rows=rows_counts[i], max_tokencount=max_tokencount, truncating_method=truncating_method, embedding_type=model_type, dataset_type=dataset_type)
                 else:
-                    dataframes[i] = prepare_data(paths[i], True, max_tokencount=max_tokencount, embedding_type=model_type)
+                    dataframes[i] = prepare_data(paths[i], True, max_tokencount=max_tokencount, embedding_type=model_type, dataset_type=dataset_type)
     #test_df = pd.read_csv("test_tokenized.csv")
     #test_df["ReviewText"] = test_df["ReviewText"].map(ast.literal_eval)
     #test_df["att_mask"] = test_df["att_mask"].map(ast.literal_eval)
@@ -99,29 +102,31 @@ def train_model(epochs, learning_rate, batch_size, max_tokencount=510, truncatin
     test_dataloader = create_dataloader(test_df, 512)
 
     # Create/load model
+    model_init = {"bert": (BertForSequenceClassification, "bert-base-uncased"), 
+                      "albert": (AlbertForSequenceClassification, "albert-base-v1"),
+                      "gpt2": (AutoModelForSequenceClassification, "gpt2"),
+                      "roberta": (AutoModelForSequenceClassification, "roberta-base")}
     if preload_model is None:
-        model_init = {"bert": (BertForSequenceClassification, "bert-base-uncased"), 
-                      "albert": (AlbertForSequenceClassification, "albert-base-v1")}
-        logging.info("Create new model ...")
+        preload_model = model_init[model_type][1]
+        logging.info("Create new model...")
+    else:
+        logging.info("Preload model...")
+        preload_model =  model_init[model_type][1]
+    if model_type == "gpt2":
         model = model_init[model_type][0].from_pretrained(
-            model_init[model_type][1],
-            attention_probs_dropout_prob=0.2,
+            preload_model,
             num_labels=2,
             output_attentions=False,
             output_hidden_states=False,
         )
     else:
-        model_init = {"bert": (BertForSequenceClassification, "bert-base-uncased"), 
-                      "albert": (AlbertForSequenceClassification, "albert-base-v1")}
-        logging.info("Load pretrained model ...")
         model = model_init[model_type][0].from_pretrained(
             preload_model,
             attention_probs_dropout_prob=0.2,
             num_labels=2,
             output_attentions=False,
-            output_hidden_states=False
+            output_hidden_states=False,
         )
-
     # Set usage of GPU or CPU
     if torch.cuda.is_available():
         device = torch.device("cuda:0")
@@ -188,7 +193,7 @@ def set_config():
         if mode not in config:
             logging.error("Invalid config number!")
         else:
-            global EPOCHS, LEARNING_RATE, BATCH_SIZE, MAX_TOKENCOUNT, TRUNCATING_METHOD, TOGGLE_PHASES, SAVE_MODEL, PRELOAD_MODEL, LOAD_EMBEDDINGS, ROWS_COUNTS, MODEL_TYPE
+            global EPOCHS, LEARNING_RATE, BATCH_SIZE, MAX_TOKENCOUNT, TRUNCATING_METHOD, TOGGLE_PHASES, SAVE_MODEL, PRELOAD_MODEL, LOAD_EMBEDDINGS, ROWS_COUNTS, MODEL_TYPE, DATASET_TYPE
             EPOCHS = config[mode]["EPOCHS"]
             LEARNING_RATE = config[mode]["LEARNING_RATE"]
             BATCH_SIZE = config[mode]["BATCH_SIZE"]
@@ -200,6 +205,7 @@ def set_config():
             LOAD_EMBEDDINGS = config[mode]["LOAD_EMBEDDINGS"]
             ROWS_COUNTS = config[mode]["ROWS_COUNTS"]
             MODEL_TYPE = config[mode]["MODEL_TYPE"]
+            DATASET_TYPE = config[mode]["DATASET_TYPE"]
     elif len(sys.argv) == 1:
         logging.warning("Config number missing!")
     else:
@@ -330,5 +336,5 @@ def test_model(model, data_loader, device):
     return non_mv_accuracy   
 
      
-#set_config()
-#train_model(EPOCHS, LEARNING_RATE, BATCH_SIZE, MAX_TOKENCOUNT, TRUNCATING_METHOD, TOGGLE_PHASES, SAVE_MODEL, PRELOAD_MODEL, LOAD_EMBEDDINGS, ROWS_COUNTS, MODEL_TYPE)
+set_config()
+train_model(EPOCHS, LEARNING_RATE, BATCH_SIZE, MAX_TOKENCOUNT, TRUNCATING_METHOD, TOGGLE_PHASES, SAVE_MODEL, PRELOAD_MODEL, LOAD_EMBEDDINGS, ROWS_COUNTS, MODEL_TYPE, DATASET_TYPE)
