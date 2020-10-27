@@ -80,7 +80,7 @@ def prepare_data(file_data, returnDF, max_tokencount=510, truncating_method="hea
         tokenizer = GPT2Tokenizer.from_pretrained("gpt2", do_lower_case=True)
     elif embedding_type == "roberta":
         tokenizer = RobertaTokenizer.from_pretrained("roberta-base", do_lower_case=True)
-    elif embedding_type == "sentiment":
+    elif embedding_type == "sentiment_bert":
         tokenizer = BertTokenizer.from_pretrained("nlptown/bert-base-multilingual-uncased-sentiment", do_lower_case=True)
     else:
         logging.error("Unknown embedding type!")
