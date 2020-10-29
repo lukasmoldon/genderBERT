@@ -9,7 +9,6 @@ import torch.nn.functional as F
 from transformers import BertModel
 from transformers import AutoTokenizer
 
-
 class CustomBERTModel(nn.Module):
 
     def __init__(self):
@@ -20,15 +19,20 @@ class CustomBERTModel(nn.Module):
           self.linear2 = nn.Linear(256, 128)
           self.linear3 = nn.Linear(128, 2)
 
-    def forward(self, ids, mask):
-          sequence_output, pooled_output = self.bert(ids, attention_mask=mask)
+    def forward(self, ids, attention_mask, labels):
+        sequence_output, pooled_output = self.bert(ids, attention_mask=attention_mask)
 
-          # shape of sequence_output: (batch_size, sequence_length, 768)
-          linear1_output = self.linear1(sequence_output[:,0,:].view(-1,768)) # extract the 1st token's embeddings
-          linear2_output = self.linear2(linear1_output)
-          linear3_output = self.linear3(linear2_output)
+        # shape of sequence_output: (batch_size, sequence_length, 768)
+        linear1_output = self.linear1(sequence_output[:,0,:].view(-1,768)) # extract the 1st token's embeddings
+        linear2_output = self.linear2(linear1_output)
+        linear3_output = self.linear3(linear2_output)
+        if labels is not None:
+            loss_fct = nn.CrossEntropyLoss()
+            loss = loss_fct(linear3_output.view(-1, 2), labels.view(-1))
+        else:
+            loss = None
 
-          return linear3_output
+        return (loss, linear3_output)
 
 
 def train(input_ids, attention_mask, data_loader, epochs):

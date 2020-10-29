@@ -276,12 +276,9 @@ def train_epoch(model, data_loader, optimizer, device, scheduler):
         model.zero_grad()
         # batch[0]: ids, [1]:masks, [2]:labels
         outputs = model(b_input_ids,
-                        token_type_ids=None,
                         labels=b_labels,
                         attention_mask=b_input_mask)
         loss = outputs[0]
-        print(loss)
-        exit()
         total_loss += loss.item()
         loss.backward()
         # Clip norm of gradients to 1.0
@@ -313,9 +310,9 @@ def eval_model(model, data_loader, device):
         b_input_mask = batch[2].to(device)
         with torch.no_grad():
             outputs = model(b_input_ids,
-                            token_type_ids=None,
-                            attention_mask=b_input_mask)  
-            logits = outputs[0].to("cpu")
+                            attention_mask=b_input_mask,
+                            labels=None)  
+            logits = outputs[1].to("cpu")
             label_ids = b_labels.to("cpu")
             _, predicted = torch.max(logits.data, 1)
             tmp_eval_acc += (predicted == label_ids).sum().item()
@@ -342,8 +339,9 @@ def test_model(model, data_loader, device):
         with torch.no_grad():
             outputs = model(b_input_ids,
                             token_type_ids=None,
-                            attention_mask=b_input_mask)  
-            logits = outputs[0].to("cpu")
+                            attention_mask=b_input_mask,
+                            labels=None)  
+            logits = outputs[1].to("cpu")
             label_ids = b_labels.to("cpu")
             _, predicted = torch.max(logits.data, 1)
             tmp_eval_acc += (predicted == label_ids).sum().item()

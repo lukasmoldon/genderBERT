@@ -72,7 +72,7 @@ def prepare_data(file_data, returnDF, max_tokencount=510, truncating_method="hea
     # load the tokenizer and selector for truncating oversized token lists
     logging.info("Loading {} tokenizer ...".format(embedding_type))
     # OLD: tokenizer = BertTokenizer.from_pretrained("bert-base-uncased", do_lower_case=True)
-    if embedding_type == "bert":
+    if embedding_type == "bert" or embedding_type == "custom_bert":
         tokenizer = BertWordPieceTokenizer("bert-base-uncased-vocab.txt", lowercase=True)
     elif embedding_type == "albert": 
         tokenizer = AlbertTokenizer.from_pretrained("albert-base-v1", do_lower_case=True)
@@ -118,7 +118,7 @@ def prepare_data(file_data, returnDF, max_tokencount=510, truncating_method="hea
 
 def tokenize(text, tokenizer, max_tokencount, truncating_method, embedding_type):
     tokens = tokenizer.encode(text, add_special_tokens=True)
-    tokens = tokens.ids if embedding_type == "bert" else tokens
+    tokens = tokens.ids if embedding_type == "bert" or embedding_type == "custom_bert" else tokens
     if len(tokens) > max_tokencount:
         global cnt_oversized
         cnt_oversized += 1
