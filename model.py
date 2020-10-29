@@ -16,6 +16,7 @@ import sys
 from sklearn import preprocessing
 from majority_voting import mv
 from majority_voting import mv_stats_f1
+from customBERT import CustomBERTModel
 
 
 
@@ -91,51 +92,15 @@ def train_model(epochs, learning_rate, batch_size, max_tokencount=510, truncatin
                     dataframes[i] = prepare_data(paths[i], True, num_rows=rows_counts[i], max_tokencount=max_tokencount, truncating_method=truncating_method, embedding_type=model_type, dataset_type=dataset_type)
                 else:
                     dataframes[i] = prepare_data(paths[i], True, max_tokencount=max_tokencount, embedding_type=model_type, dataset_type=dataset_type)
-    #test_df = pd.read_csv("test_tokenized.csv")
-    #test_df["ReviewText"] = test_df["ReviewText"].map(ast.literal_eval)
-    #test_df["att_mask"] = test_df["att_mask"].map(ast.literal_eval)
-    #dataframes[2] = test_df
     train_df, val_df, test_df = dataframes
     # Create tensors from loaded data
     logging.info("Create tensors ...")
     train_dataloader = create_dataloader(train_df, batch_size)
     val_dataloader = create_dataloader(val_df, batch_size)
     test_dataloader = create_dataloader(test_df, 256)
-
-    # Create/load model
-    model_init = {"bert": (BertForSequenceClassification, "bert-base-uncased"), 
-                      "albert": (AlbertForSequenceClassification, "albert-base-v1"),
-                      "gpt2": (AutoModelForSequenceClassification, "gpt2"),
-                      "roberta": (AutoModelForSequenceClassification, "roberta-base"),
-                      "sentiment_bert": (BertForSequenceClassification, "nlptown/bert-base-multilingual-uncased-sentiment")}
-    if preload_model is None:
-        preload_model = model_init[model_type][1]
-        logging.info("Create new model...")
-    else:
-        logging.info("Preload model...")
-        preload_model =  model_init[model_type][1]
-    if model_type == "sentiment_bert":
-        num_labels = 5
-    else:
-        num_labels = 2
-    if model_type == "gpt2":
-        model = model_init[model_type][0].from_pretrained(
-            preload_model,
-            num_labels=num_labels,
-            output_attentions=False,
-            output_hidden_states=False,
-        )
-    else:
-        model = model_init[model_type][0].from_pretrained(
-            preload_model,
-            attention_probs_dropout_prob=0.2,
-            num_labels=num_labels,
-            output_attentions=False,
-            output_hidden_states=False,
-        )
-    if model_type == "sentiment_bert":
-        model.classifier = torch.nn.Linear(model.classifier.in_features, 2)
-        model.num_labels = 2
+    # Create model
+    # TODO: Add bert_freeze config constant
+    model = create_model(preload_model, model_type, True)
     # Set usage of GPU or CPU
     if torch.cuda.is_available():
         device = torch.device("cuda:0")
@@ -151,7 +116,8 @@ def train_model(epochs, learning_rate, batch_size, max_tokencount=510, truncatin
         scheduler = get_linear_schedule_with_warmup(optimizer,
                                                     num_warmup_steps=0,
                                                     num_training_steps=len(train_dataloader) * epochs)
-                                                
+
+
     # Train model
     seed_val = 42
     random.seed(seed_val)
@@ -160,8 +126,6 @@ def train_model(epochs, learning_rate, batch_size, max_tokencount=510, truncatin
     torch.cuda.manual_seed_all(seed_val)
     loss_values = []
     stats = {}
-
-    # TODO: Save best model
     for epoch_i in range(epochs):
         logging.info("-------- Epoch {} / {} --------".format(epoch_i + 1, epochs))
         if toggle_phases[0]:
@@ -173,11 +137,9 @@ def train_model(epochs, learning_rate, batch_size, max_tokencount=510, truncatin
         # ---VALIDATION--- 
         if toggle_phases[1]:
             acc = eval_model(model, val_dataloader, device)
-            #stats[str(epoch_i)]["accuracy"] = acc
     # ---TESTING ---
     if toggle_phases[2]:
         acc = test_model(model, test_dataloader, device)
-        #stats[str(epoch_i)]["accuracy (Non-MV)"] = acc
 
     logging.info("Training complete!")
     log_endtime = datetime.datetime.now()
@@ -194,7 +156,53 @@ def train_model(epochs, learning_rate, batch_size, max_tokencount=510, truncatin
             return model
 
 
+def create_model(preload_model, model_type, bert_freeze):
+    # Create/load model
+    # TODO: Test if working for custom_bert
+    if model_type == "custom_bert":
+        model = CustomBERTModel()
+    else:
+        model_init = {"bert": "bert-base-uncased", 
+                        "albert": "albert-base-v1",
+                        "gpt2": "gpt2",
+                        "roberta": "roberta-base",
+                        "sentiment_bert": "nlptown/bert-base-multilingual-uncased-sentiment"}
+        if preload_model is None:
+            preload_model = model_init[model_type]
+            logging.info("Create new model...")
+        else:
+            logging.info("Preload model...")
+        num_labels = 5 if model_type == "sentiment_bert" else 2
+        # GPT2 has no dropout param
+        if model_type == "gpt2":
+            model = AutoModelForSequenceClassification.from_pretrained(
+                preload_model,
+                num_labels=num_labels,
+                output_attentions=False,
+                output_hidden_states=False,
+            )
+        else:
+            model = AutoModelForSequenceClassification.from_pretrained(
+                preload_model,
+                attention_probs_dropout_prob=0.2,
+                num_labels=num_labels,
+                output_attentions=False,
+                output_hidden_states=False,
+            )
+        if model_type == "sentiment_bert":
+            model.classifier = torch.nn.Linear(model.classifier.in_features, 2)
+            model.num_labels = 2
+    # Freeze BERT layers of model
+    if bert_freeze:
+        logging.info("Freeze BERT layers...")
+        for name, param in model.named_parameters():
+            if 'classifier' not in name and 'linear' not in name: # classifier layer
+                param.requires_grad = False
+    return model
+
+
 def set_config():
+    # Sets the constants using the config.json file
     if len(sys.argv) == 2:
         mode = sys.argv[1]
         with open("config.json", "r") as fp:
@@ -221,14 +229,15 @@ def set_config():
         logging.error("Invalid arguments!")
 
 
-# Helper function for accuracy
 def flat_accuracy(predicitions, labels):
+    # Helper function for accuracy
     pred_flat = np.argmax(predicitions, axis=1).flatten()
     labels_flat = labels.flatten()
     return np.sum(pred_flat == labels_flat) / len(labels_flat)
 
 
 def create_dataloader(dataframe, batch_size):
+    # Creates DataLoader from dataframe.
     if dataframe is None:
         return None
     logging.info("Create tensors ...")
@@ -254,6 +263,7 @@ def create_dataloader(dataframe, batch_size):
 
 
 def train_epoch(model, data_loader, optimizer, device, scheduler):
+    # Trains given model for one epoch
     # TODO: How exactly is the loss function specified?
     logging.info("Training ...")
     total_loss = 0
@@ -270,6 +280,8 @@ def train_epoch(model, data_loader, optimizer, device, scheduler):
                         labels=b_labels,
                         attention_mask=b_input_mask)
         loss = outputs[0]
+        print(loss)
+        exit()
         total_loss += loss.item()
         loss.backward()
         # Clip norm of gradients to 1.0
@@ -289,6 +301,7 @@ def train_epoch(model, data_loader, optimizer, device, scheduler):
 
 
 def eval_model(model, data_loader, device):
+    # Evaluate given model
     # TODO: Add loss
     logging.info("-" * 30)
     logging.info("Start validation ...")
@@ -313,6 +326,7 @@ def eval_model(model, data_loader, device):
 
 
 def test_model(model, data_loader, device):
+    # Test given model
     # TODO: Add loss
     logging.info("-" * 30)
     logging.info("Start testing ...")
