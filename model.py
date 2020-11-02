@@ -32,6 +32,7 @@ PRELOAD_MODEL = None
 LOAD_EMBEDDINGS = None
 ROWS_COUNTS = [100, 10, 10]
 MODEL_TYPE = "bert"
+BASE_FREEZE = False
 PATHS = {"amazon": ["../datasets/amazon/User_level_train.csv", "../datasets/amazon/User_level_validation.csv", "../datasets/amazon/User_level_test_with_id.csv"],
         "stackover": ["../datasets/stackover/train_so.csv", "../datasets/stackover/validation_so.csv", "../datasets/stackover/test_so.csv"],
         "reddit": ["../datasets/reddit/train_reddit.csv", "../datasets/reddit/validation_reddit.csv", "../datasets/reddit/test_reddit.csv"]}
@@ -39,7 +40,7 @@ PATHS = {"amazon": ["../datasets/amazon/User_level_train.csv", "../datasets/amaz
 
 def train_model(epochs, learning_rate, batch_size, max_tokencount=510, truncating_method="head", toggle_phases=[True, True, False], save_model=True,
                 preload_model=None, load_embeddings=None, rows_counts=[None, None, None], model_type="bert", dataset_type="amazon",
-                return_model=False, return_stats=False):
+                base_freeze=False, return_model=False, return_stats=False):
     """
     Run main script for model training/validation/testing.
 
@@ -66,6 +67,10 @@ def train_model(epochs, learning_rate, batch_size, max_tokencount=510, truncatin
         rows_counts([int]): Specifies how many data entries are used for training/validation/testing ([Training, Validation, Testing]).
 
         model_type(string): Specifies type of model (bert/albert).
+
+        dataset_type(string): Specifies dataset used (amazon, stackover, reddit), defaults to amazon.
+        
+        base_freeze(bool): Freezes base network layers (BERT/GPT2 etc.) when training if True, defaults to False.
 
         return_model(bool): Returns final model if set to true.
 
@@ -99,8 +104,7 @@ def train_model(epochs, learning_rate, batch_size, max_tokencount=510, truncatin
     val_dataloader = create_dataloader(val_df, batch_size)
     test_dataloader = create_dataloader(test_df, 256)
     # Create model
-    # TODO: Add bert_freeze config constant
-    model = create_model(preload_model, model_type, True)
+    model = create_model(preload_model, model_type, bert_freeze)
     # Set usage of GPU or CPU
     if torch.cuda.is_available():
         device = torch.device("cuda:0")
@@ -158,7 +162,6 @@ def train_model(epochs, learning_rate, batch_size, max_tokencount=510, truncatin
 
 def create_model(preload_model, model_type, bert_freeze):
     # Create/load model
-    # TODO: Test if working for custom_bert
     if model_type == "custom_bert":
         model = CustomBERTModel()
     else:
@@ -210,7 +213,7 @@ def set_config():
         if mode not in config:
             logging.error("Invalid config number!")
         else:
-            global EPOCHS, LEARNING_RATE, BATCH_SIZE, MAX_TOKENCOUNT, TRUNCATING_METHOD, TOGGLE_PHASES, SAVE_MODEL, PRELOAD_MODEL, LOAD_EMBEDDINGS, ROWS_COUNTS, MODEL_TYPE, DATASET_TYPE
+            global EPOCHS, LEARNING_RATE, BATCH_SIZE, MAX_TOKENCOUNT, TRUNCATING_METHOD, TOGGLE_PHASES, SAVE_MODEL, PRELOAD_MODEL, LOAD_EMBEDDINGS, ROWS_COUNTS, MODEL_TYPE, DATASET_TYPE, BASE_FREEZE
             EPOCHS = config[mode]["EPOCHS"]
             LEARNING_RATE = config[mode]["LEARNING_RATE"]
             BATCH_SIZE = config[mode]["BATCH_SIZE"]
@@ -223,6 +226,7 @@ def set_config():
             ROWS_COUNTS = config[mode]["ROWS_COUNTS"]
             MODEL_TYPE = config[mode]["MODEL_TYPE"]
             DATASET_TYPE = config[mode]["DATASET_TYPE"]
+            BASE_FREEZE = config[mode]["BASE_FREEZE"]
     elif len(sys.argv) == 1:
         logging.warning("Config number missing!")
     else:
@@ -264,7 +268,6 @@ def create_dataloader(dataframe, batch_size):
 
 def train_epoch(model, data_loader, optimizer, device, scheduler):
     # Trains given model for one epoch
-    # TODO: How exactly is the loss function specified?
     logging.info("Training ...")
     total_loss = 0
     model.train()
@@ -312,7 +315,8 @@ def eval_model(model, data_loader, device):
             outputs = model(b_input_ids,
                             attention_mask=b_input_mask,
                             labels=None)  
-            logits = outputs[1].to("cpu")
+            ind = 1 if MODEL_TYPE == "custom_bert" else 0
+            logits = outputs[ind].to("cpu")
             label_ids = b_labels.to("cpu")
             _, predicted = torch.max(logits.data, 1)
             tmp_eval_acc += (predicted == label_ids).sum().item()
@@ -341,7 +345,8 @@ def test_model(model, data_loader, device):
                             token_type_ids=None,
                             attention_mask=b_input_mask,
                             labels=None)  
-            logits = outputs[1].to("cpu")
+            ind = 1 if MODEL_TYPE == "custom_bert" else 0
+            logits = outputs[ind].to("cpu")
             label_ids = b_labels.to("cpu")
             _, predicted = torch.max(logits.data, 1)
             tmp_eval_acc += (predicted == label_ids).sum().item()
@@ -362,4 +367,4 @@ def test_model(model, data_loader, device):
 
      
 set_config()
-train_model(EPOCHS, LEARNING_RATE, BATCH_SIZE, MAX_TOKENCOUNT, TRUNCATING_METHOD, TOGGLE_PHASES, SAVE_MODEL, PRELOAD_MODEL, LOAD_EMBEDDINGS, ROWS_COUNTS, MODEL_TYPE, DATASET_TYPE)
+train_model(EPOCHS, LEARNING_RATE, BATCH_SIZE, MAX_TOKENCOUNT, TRUNCATING_METHOD, TOGGLE_PHASES, SAVE_MODEL, PRELOAD_MODEL, LOAD_EMBEDDINGS, ROWS_COUNTS, MODEL_TYPE, DATASET_TYPE, BASE_FREEZE)
