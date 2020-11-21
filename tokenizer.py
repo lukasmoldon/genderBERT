@@ -3,8 +3,10 @@ import datetime
 from datetime import date, timedelta
 import pandas as pd
 import logging
-from transformers import AlbertTokenizer, BertTokenizer, GPT2Tokenizer, RobertaTokenizer
+from transformers import AlbertTokenizer, BertTokenizer, GPT2Tokenizer, RobertaTokenizer, AutoTokenizer
 from tokenizers import BertWordPieceTokenizer
+import torch
+from sklearn import preprocessing
 
 cnt_oversized = 0
 
@@ -18,7 +20,7 @@ cnt_oversized = 0
 
 
 
-def prepare_data(file_data, returnDF, max_tokencount=510, truncating_method="head", file_results=None, num_rows=None, embedding_type="bert", dataset_type="amazon"):
+def prepare_data(file_data, return_data, max_tokencount=510, truncating_method="head", file_results=None, num_rows=None, embedding_type="bert", dataset_type="amazon"):
 
     """
     Prepare the data for the BERT model.
@@ -108,12 +110,107 @@ def prepare_data(file_data, returnDF, max_tokencount=510, truncating_method="hea
     log_endtime = datetime.datetime.now()
     log_runtime = (log_endtime - log_starttime)
     logging.info("Total runtime: " + str(log_runtime))
-
+    # TODO: Make this better intregrated into the rest of the code
+    # Turn dataframe back to dict for torch.save
+    results = {}
+    results["input_ids"] = torch.tensor(list(data["ReviewText"]))
+    results["attention_mask"] = torch.tensor(list(data["att_mask"]))
+    target_tensor = torch.tensor(pd.to_numeric(list(data["Gender"])))
+    results["target"] = target_tensor
+    if 'UserId' in data.columns:
+        id_list = list(data["UserId"])
+        le = preprocessing.LabelEncoder()
+        user_ids = le.fit_transform(id_list)
+        id_tens = torch.tensor(user_ids)
+        results["user_id"] = id_tens
     # return resulting data
     if file_results != None:
-        data.to_csv(file_results, index=False)
-    if returnDF:
-        return data
+        torch.save(results, file_results)
+    if return_data:
+        return results
+
+
+def tokenize_data(file_data, returnRes, max_tokencount=510, truncating_method="head", file_results=None, num_rows=None, embedding_type="bert", dataset_type="amazon"):
+
+    """
+    Cleaner version of prepare_data (BUT WITHOUT TRUNCATION STRATEGY)
+    Prepare the data for the BERT model.
+    (1) Load and analyze the given data set
+    (2) Tokenize the words
+    (3) Truncate oversized data
+    (4) Add padding and create the attention mask
+
+    Parameters:
+        file_data(string): Path to input data.
+
+        returnRes(bool): Returns result if true.
+
+        max_tokencount(int): Maximum amount of words/tokens in [1,510] (BERT is limited to 512 including CLS and SEP) for a single review, 
+        truncating gets applied if text length exceeds this timit.
+
+        truncating_method(string): Specifies how to truncate an oversized list of tokens using a method from ["head", "tail", "headtail"]. 
+                                   MAKES NO DIFFERENCE HERE!
+
+        file_results(string): Specifies whether result should be saved (give path as string) or not (None).
+
+        num_rows(int): Specifies whether input data should be limited to n rows or not (None).
+
+        embedding_type(bool): Specifies which tokenizer should be used (bert/albert).
+
+        dataset_type(string): Specifies which dataset to use (amazon/reddit/stackover)
+
+    Returns:
+        data(pandas.DataFrame): Returns dataframe of tokens if returnDF is set to true.
+    '''
+    """
+
+    logging.basicConfig(format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%m-%y %H:%M:%S', level=logging.INFO)
+    # Load the data
+    if dataset_type == "amazon":
+        names = ["UserId", "ReviewText", "Gender"] if "test" in file_data else ["Gender", "ReviewText"]
+    else:
+        names = ["UserId", "Gender", "ReviewText"] if "test" in file_data else ["Gender", "ReviewText"]
+    if num_rows is None:
+        data = pd.read_csv(file_data, names=names)
+    else:
+        data = pd.read_csv(file_data, nrows=num_rows, names=names)
+    # Swap columns
+    if dataset_type != "amazon":
+        data = data.reindex(columns=["UserId", "ReviewText", "Gender"]) if "test" in file_data else data
+    # tag statistics
+    logging.info("Total: {}".format(len(data)))
+    logging.info("Male: {} ({:.2%})".format(len(data[data["Gender"] == 1]), len(data[data["Gender"] == 1])/len(data)))
+    logging.info("Female: {} ({:.2%})".format(len(data[data["Gender"] == 0]), len(data[data["Gender"] == 0])/len(data)))
+
+    # load the tokenizer and selector for truncating oversized token lists
+    logging.info("Loading {} tokenizer ...".format(embedding_type))
+    pretrained_name = { "bert": "bert-base-uncased",
+                        "custom_bert": "bert-base-uncased",
+                        "albert": "albert-base-v1",
+                        "gpt2": "gpt2",
+                        "roberta": "roberta-base",
+                        "sentiment_bert": "nlptown/bert-base-multilingual-uncased-sentiment"}
+    tokenizer = AutoTokenizer.from_pretrained(pretrained_name[embedding_type], do_lower_case=True)
+    max_tokencount = min(max_tokencount, 510)
+    logging.info("Done!")
+    # tokenize, truncate oversized data (BERT is limited to 512 tokens) and apply padding
+    logging.info("Applying tokenizer ...")
+    logging.disable(logging.WARNING)
+    print(data.head())
+    encoding = tokenizer.batch_encode_plus(data["ReviewText"], return_tensors="pt", padding=True, truncation=True, max_length=max_tokencount, add_special_tokens=True)
+    target_tensor = torch.tensor(pd.to_numeric(list(data["Gender"])))
+    encoding["target"] = target_tensor
+    if 'UserId' in data.columns:
+        id_list = list(data["UserId"])
+        le = preprocessing.LabelEncoder()
+        user_ids = le.fit_transform(id_list)
+        id_tens = torch.tensor(user_ids)
+        encoding["user_id"] = id_tens
+    # return resulting data
+    if file_results != None:
+        torch.save(encoding, file_results)
+    if returnRes:
+        return encoding        
 
 
 def tokenize(text, tokenizer, max_tokencount, truncating_method, embedding_type):
@@ -129,3 +226,4 @@ def tokenize(text, tokenizer, max_tokencount, truncating_method, embedding_type)
 
 def am(tokens): # create attention mask
     return [int(token > 0) for token in tokens]
+
