@@ -181,13 +181,31 @@ Deep learning model for gender classification on texts using pretrained BERT mod
     <th>Accuracy</th>
   </tr>
   <tr>
-    <td>BERT</td>
-    <td>0.???</td>
-    <td>0.???</td>
-    <td>0.???</td>
-    <td>0.???</td>
-    <td>0.???</td>
-    <td>0.???</td>
+    <td>HAN</td>
+    <td>0.644</td>
+    <td>0.660</td>
+    <td>0.652</td>
+    <td>0.909</td>
+    <td>0.907</td>
+    <td>0.908</td>
+  </tr>
+  <tr>
+    <td>VDCNN</td>
+    <td>0.718</td>
+    <td>0.659</td>
+    <td>0.692</td>
+    <td>0.879</td>
+    <td>0.848</td>
+    <td>0.865</td>
+  </tr>
+  <tr>
+    <td>roBERT(10%)</td>
+    <td>0.685</td>
+    <td>0.681</td>
+    <td>0.683</td>
+    <td>0.916</td>
+    <td>0.909</td>
+    <td>0.913</td>
   </tr>
 </tbody>
 </table>
