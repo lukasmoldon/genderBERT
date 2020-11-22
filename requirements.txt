@@ -1,0 +1,6 @@
+tokenizers==0.8.1rc2
+torch==1.7.0
+pandas==0.25.2
+transformers==3.1.0
+numpy==1.18.5
+scikit_learn==0.23.2

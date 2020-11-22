@@ -48,9 +48,9 @@ def load_embeddings(dataset_type, model_type, toggle_phases, load_embeddings, ro
         # Toggle Phases: Decide whether to load data for train(0)/val(1)/test(2)
         if toggle_phases[i]:
             # Load embedding if given
-            if load_embeddings is not None:
-                if load_embeddings[i] is not None:
-                    embeddings[i] = torch.load(load_embeddings[i])
+            if load_embeddings[i] is not None:
+                logging.info("Load embedding ...")
+                embeddings[i] = torch.load(load_embeddings[i])
             # Create exactly row counts many embedded instances
             elif rows_counts[i] is not None:    
                 embeddings[i] = prepare_data(paths[i], True, num_rows=rows_counts[i], max_tokencount=max_tokencount,

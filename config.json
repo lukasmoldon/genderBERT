@@ -15,23 +15,38 @@
         "BASE_FREEZE": true
     },
     "2": {
-        "EPOCHS": 3,
-        "LEARNING_RATE": 2e-5,
+        "EPOCHS": 4,
+        "LEARNING_RATE": 1e-5,
         "BATCH_SIZE": 16,
         "MAX_TOKENCOUNT": 128,
         "TRUNCATING_METHOD": "headtail",
         "TOGGLE_PHASES": [true, false, true],
-        "SAVE_MODEL": "bert1m_freeze_model",
+        "SAVE_MODEL": "stackoverbert4epochs_roberta_3",
         "PRELOAD_MODEL": null,
         "LOAD_EMBEDDINGS": null,
-        "ROWS_COUNTS": [1000000, null, null],
-        "MODEL_TYPE": "bert",
-        "DATASET_TYPE": "amazon",
-        "BASE_FREEZE": true
+        "ROWS_COUNTS": [null, null, null],
+        "MODEL_TYPE": "roberta",
+        "DATASET_TYPE": "stackover",
+        "BASE_FREEZE": false
     },
     "3": {
-        "EPOCHS": 3,
-        "LEARNING_RATE": 2e-5,
+        "EPOCHS": 6,
+        "LEARNING_RATE": 0.1,
+        "BATCH_SIZE": 64,
+        "MAX_TOKENCOUNT": 128,
+        "TRUNCATING_METHOD": "headtail",
+        "TOGGLE_PHASES": [true, false, true],
+        "SAVE_MODEL": null,
+        "PRELOAD_MODEL": null,
+        "LOAD_EMBEDDINGS": null,
+        "ROWS_COUNTS": [10, null, 10],
+        "MODEL_TYPE": "bert",
+        "DATASET_TYPE": "stackover",
+        "BASE_FREEZE": true
+    },
+    "4": {
+        "EPOCHS": 4,
+        "LEARNING_RATE": 0.001,
         "BATCH_SIZE": 16,
         "MAX_TOKENCOUNT": 128,
         "TRUNCATING_METHOD": "headtail",
@@ -41,33 +56,52 @@
         "LOAD_EMBEDDINGS": null,
         "ROWS_COUNTS": [null, null, null],
         "MODEL_TYPE": "bert",
-        "DATASET_TYPE": "stackover"
+        "DATASET_TYPE": "stackover",
+        "BASE_FREEZE": true
     },
-    "4": {
-        "EPOCHS": 3,
+    "5": {
+        "EPOCHS": 4,
         "LEARNING_RATE": 2e-5,
-        "BATCH_SIZE": 16,
+        "BATCH_SIZE": 32,
         "MAX_TOKENCOUNT": 128,
         "TRUNCATING_METHOD": "headtail",
         "TOGGLE_PHASES": [true, false, true],
-        "SAVE_MODEL": "stackover_bert",
+        "SAVE_MODEL": "reddit_bert_base_2m",
         "PRELOAD_MODEL": null,
         "LOAD_EMBEDDINGS": null,
-        "ROWS_COUNTS": [10000, null, 10000],
+        "ROWS_COUNTS": [2000000, null, 100000],
         "MODEL_TYPE": "bert",
-        "DATASET_TYPE": "stackover"
+        "DATASET_TYPE": "reddit",
+        "BASE_FREEZE": false
     },
-    "5": {
-        "EPOCHS": 3,
+    "6": {
+        "EPOCHS": 4,
         "LEARNING_RATE": 2e-5,
         "BATCH_SIZE": 16,
-        "MAX_TOKENCOUNT": 128,
+        "MAX_TOKENCOUNT": 64,
+        "TRUNCATING_METHOD": "headtail",
+        "TOGGLE_PHASES": [true, false, true],
+        "SAVE_MODEL": "reddit",
+        "PRELOAD_MODEL": null,
+        "LOAD_EMBEDDINGS": null,
+        "ROWS_COUNTS": [2849692, null, null],
+        "MODEL_TYPE": "roberta",
+        "DATASET_TYPE": "reddit",
+        "BASE_FREEZE": false
+    },
+    "7": {
+        "EPOCHS": 4,
+        "LEARNING_RATE": 2e-5,
+        "BATCH_SIZE": 16,
+        "MAX_TOKENCOUNT": 64,
         "TRUNCATING_METHOD": "headtail",
         "TOGGLE_PHASES": [false, false, true],
         "SAVE_MODEL": null,
-        "PRELOAD_MODEL": "million_epoch3.model",
-        "LOAD_EMBEDDINGS": null,
-        "ROWS_COUNTS": [10000, null, null],
-        "MODEL_TYPE": "bert"
+        "PRELOAD_MODEL": "reddit_epoch_4",
+        "LOAD_EMBEDDINGS": [null, null, "reddit_bert_100_64_headtail_test"],
+        "ROWS_COUNTS": [null, null, 100],
+        "MODEL_TYPE": "bert",
+        "DATASET_TYPE": "reddit",
+        "BASE_FREEZE": false
     }
 }

@@ -8,10 +8,10 @@ import datetime
 import random
 
 
-def set_config(mode):
+def set_config():
     # Sets the constants using the config.json file
-    if len([1, 1]) == 2:
-        #mode = sys.argv[1]
+    if len(sys.argv) == 2:
+        mode = sys.argv[1]
         with open("config.json", "r") as fp:
             config = json.load(fp)
         if mode not in config:
@@ -38,12 +38,12 @@ def set_config(mode):
 
 
 def main(return_model):
-    set_config("7")
+    set_config()
     logging.basicConfig(
         format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%m-%y %H:%M:%S', level=logging.INFO)
     log_starttime = datetime.datetime.now()
     train_data, val_data, test_data = load_embeddings(
-        DATASET_TYPE, MODEL_TYPE, TOGGLE_PHASES, LOAD_EMBEDDINGS, ROWS_COUNTS, MAX_TOKENCOUNT, TRUNCATING_METHOD, save_embeddings=False)
+        DATASET_TYPE, MODEL_TYPE, TOGGLE_PHASES, LOAD_EMBEDDINGS, ROWS_COUNTS, MAX_TOKENCOUNT, TRUNCATING_METHOD, save_embeddings=True)
     logging.info("Create dataloaders ...")
     train_dataloader = create_dataloader(train_data, BATCH_SIZE)
     val_dataloader = create_dataloader(val_data, BATCH_SIZE)
