@@ -3,7 +3,7 @@ import datetime
 from datetime import date, timedelta
 import pandas as pd
 import logging
-from transformers import AlbertTokenizer, BertTokenizer, GPT2Tokenizer, RobertaTokenizer, AutoTokenizer
+from transformers import AlbertTokenizer, BertTokenizer, OpenAIGPTTokenizer, RobertaTokenizer, AutoTokenizer, DistilBertTokenizer
 from tokenizers import BertWordPieceTokenizer
 import torch
 from sklearn import preprocessing
@@ -78,10 +78,12 @@ def prepare_data(file_data, return_data, max_tokencount=510, truncating_method="
         tokenizer = BertWordPieceTokenizer("bert-base-uncased-vocab.txt", lowercase=True)
     elif embedding_type == "albert": 
         tokenizer = AlbertTokenizer.from_pretrained("albert-base-v1", do_lower_case=True)
-    elif embedding_type == "gpt2":
-        tokenizer = GPT2Tokenizer.from_pretrained("gpt2", do_lower_case=True)
+    elif embedding_type == "gpt":
+        tokenizer = OpenAIGPTTokenizer.from_pretrained("openai-gpt", do_lower_case=True)
     elif embedding_type == "roberta":
         tokenizer = RobertaTokenizer.from_pretrained("roberta-base", do_lower_case=True)
+    elif embedding_type == "distilbert":
+        tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased", do_lower_case=True)
     elif embedding_type == "sentiment_bert":
         tokenizer = BertTokenizer.from_pretrained("nlptown/bert-base-multilingual-uncased-sentiment", do_lower_case=True)
     else:
@@ -188,6 +190,7 @@ def tokenize_data(file_data, returnRes, max_tokencount=510, truncating_method="h
                         "custom_bert": "bert-base-uncased",
                         "albert": "albert-base-v1",
                         "gpt2": "gpt2",
+                        "distilbert": "distilbert-base-uncased",
                         "roberta": "roberta-base",
                         "sentiment_bert": "nlptown/bert-base-multilingual-uncased-sentiment"}
     tokenizer = AutoTokenizer.from_pretrained(pretrained_name[embedding_type], do_lower_case=True)

@@ -71,7 +71,8 @@ def create_model(preload_model, model_type, bert_freeze):
     else:
         model_init = {"bert": "bert-base-uncased",
                       "albert": "albert-base-v1",
-                      "gpt2": "gpt2",
+                      "gpt": "openai-gpt",
+                      "distilbert": "distilbert-base-uncased",
                       "roberta": "roberta-base",
                       "sentiment_bert": "nlptown/bert-base-multilingual-uncased-sentiment"}
         if preload_model is None:
@@ -80,8 +81,8 @@ def create_model(preload_model, model_type, bert_freeze):
         else:
             logging.info("Preload model...")
         num_labels = 5 if model_type == "sentiment_bert" else 2
-        # GPT2 has no dropout param
-        if model_type == "gpt2":
+        # GPT has no dropout param
+        if model_type == "distilbert":
             model = AutoModelForSequenceClassification.from_pretrained(
                 preload_model,
                 num_labels=num_labels,

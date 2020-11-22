@@ -43,7 +43,7 @@ def main(return_model):
         format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%m-%y %H:%M:%S', level=logging.INFO)
     log_starttime = datetime.datetime.now()
     train_data, val_data, test_data = load_embeddings(
-        DATASET_TYPE, MODEL_TYPE, TOGGLE_PHASES, LOAD_EMBEDDINGS, ROWS_COUNTS, MAX_TOKENCOUNT, TRUNCATING_METHOD, save_embeddings=True)
+        DATASET_TYPE, MODEL_TYPE, TOGGLE_PHASES, LOAD_EMBEDDINGS, ROWS_COUNTS, MAX_TOKENCOUNT, TRUNCATING_METHOD, save_embeddings=False)
     logging.info("Create dataloaders ...")
     train_dataloader = create_dataloader(train_data, BATCH_SIZE)
     val_dataloader = create_dataloader(val_data, BATCH_SIZE)
@@ -70,16 +70,16 @@ def main(return_model):
             loss, acc = train_epoch(
                 model, train_dataloader, optimizer, device, scheduler)
             stats[str(epoch_i)] = {"loss": loss, "accuracy": acc}
-            if SAVE_MODEL is not None:
-                logging.info("Save model...")
-                model.save_pretrained(
-                    "{}_epoch_{}".format(SAVE_MODEL, epoch_i+1))
-        # ---VALIDATION---
+        # --- VALIDATION ---
         if TOGGLE_PHASES[1]:
             acc = eval_model(model, val_dataloader, device, MODEL_TYPE)
-    # ---TESTING ---
+    # --- TESTING ---
     if TOGGLE_PHASES[2]:
         acc = test_model(model, test_dataloader, device, MODEL_TYPE)
+    # --- SAVING ---
+    if SAVE_MODEL is not None:
+        logging.info("Save model...")
+        model.save_pretrained(SAVE_MODEL)
     logging.info("Training complete!")
     log_endtime = datetime.datetime.now()
     log_runtime = (log_endtime - log_starttime)
