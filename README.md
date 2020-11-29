@@ -101,13 +101,13 @@ Deep learning model for gender classification on texts using pretrained BERT mod
     <td>0.830</td>
   </tr>
   <tr>
-    <td>GPT2 (1M)</td>
-    <td>0.750</td>
-    <td>0.767</td>
-    <td>0.759</td>
-    <td>0.823</td>
-    <td>0.837</td>
-    <td>0.830</td>
+    <td>distilBERT (1M)</td>
+    <td>0.731</td>
+    <td>0.754</td>
+    <td>0.743</td>
+    <td>0.802</td>
+    <td>0.819</td>
+    <td>0.802</td>
   </tr>
 </tbody>
 </table>
@@ -158,6 +158,15 @@ Deep learning model for gender classification on texts using pretrained BERT mod
     <td>0.710</td>
     <td>0.717</td>
   </tr>
+  <tr>
+    <td>distilBERT (2e-5)</td>
+    <td>0.640</td>
+    <td>0.649</td>
+    <td>0.644</td>
+    <td>0.711</td>
+    <td>0.715</td>
+    <td>0.713</td>
+  </tr>
 </tbody>
 </table>
 
@@ -197,6 +206,15 @@ Deep learning model for gender classification on texts using pretrained BERT mod
     <td>0.879</td>
     <td>0.848</td>
     <td>0.865</td>
+  </tr>
+  <tr>
+    <td>BERT(10%)</td>
+    <td>0.702</td>
+    <td>0.686</td>
+    <td>0.695</td>
+    <td>0.914</td>
+    <td>0.905</td>
+    <td>0.914</td>
   </tr>
   <tr>
     <td>roBERTa(10%)</td>
