@@ -1,6 +1,6 @@
 
 # genderBERT
-Deep learning model for gender classification on texts using pretrained BERT models. Our trained model with the highest accuracy (see section 'Results') can be downloaded here **(TODO)**.
+Deep learning model for gender classification on texts using pretrained BERT models. Our trained models with the highest accuracy for each data set (see section ['Results'](https://github.com/lukasmoldon/genderBERT#results-on-data)) can be downloaded [via zenodo.org](https://www.zenodo.org/) or [via figshare.com](https://figshare.com/).
 
 ## Used pretrained models
 
@@ -68,7 +68,7 @@ Deep learning model for gender classification on texts using pretrained BERT mod
     <td>VCDNN</td>
     <td>0.751</td>
     <td>0.770</td>
-    <td>0.761</td>
+    <td><b>0.761</b></td>
     <td>0.823</td>
     <td>0.834</td>
     <td>0.831</td>
@@ -80,7 +80,7 @@ Deep learning model for gender classification on texts using pretrained BERT mod
     <td>0.759</td>
     <td>0.824</td>
     <td>0.841</td>
-    <td>0.833</td>
+    <td><b>0.833</b></td>
   </tr>
   <tr>
     <td>BERT/F (1M)</td>
@@ -147,13 +147,13 @@ Deep learning model for gender classification on texts using pretrained BERT mod
     <td>0.649</td>
     <td>0.743</td>
     <td>0.725</td>
-    <td>0.734</td>
+    <td><b>0.734</b></td>
   </tr>
   <tr>
     <td>roBERTa (2e-5)</td>
     <td>0.658</td>
     <td>0.653</td>
-    <td>0.655</td>
+    <td><b>0.655</b></td>
     <td>0.724</td>
     <td>0.710</td>
     <td>0.717</td>
@@ -208,16 +208,16 @@ Deep learning model for gender classification on texts using pretrained BERT mod
     <td>0.865</td>
   </tr>
   <tr>
-    <td>BERT(10%)</td>
+    <td>BERT (10%)</td>
     <td>0.702</td>
     <td>0.686</td>
-    <td>0.695</td>
+    <td><b>0.695</b></td>
     <td>0.914</td>
     <td>0.905</td>
-    <td>0.914</td>
+    <td><b>0.914</b></td>
   </tr>
   <tr>
-    <td>roBERTa(10%)</td>
+    <td>roBERTa (10%)</td>
     <td>0.685</td>
     <td>0.681</td>
     <td>0.683</td>
