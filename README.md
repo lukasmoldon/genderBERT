@@ -1,6 +1,6 @@
 
 # genderBERT
-Deep learning model for gender classification on texts using pretrained BERT models for the paper '' **(TODO)**. Our trained model with the highest accuracy (see section 'Results') can be downloaded here **(TODO)**.
+Deep learning model for gender classification on texts using pretrained BERT models. Our trained model with the highest accuracy (see section 'Results') can be downloaded here **(TODO)**.
 
 ## Used pretrained models
 
@@ -29,9 +29,9 @@ Deep learning model for gender classification on texts using pretrained BERT mod
 
 ## Code
 :arrow_forward: For more detailed information, use the corresponding link to the [docsring](https://www.python.org/dev/peps/pep-0257/) at the end of each descirption.
-* **main.py** - Main file of the project. Uses tokenization and model functionalities to create new models in accordance to the configuration set in the config.son
-* **tokenizer.py** - Prepares the data for the main file. The given data set gets tokenized with applied padding and oversized texts get truncated. It stores the resulting tokenized texts and the corresponding attention mask. ([docstring](https://github.com/lukasmoldon/genderBERT/blob/master/tokenizer.py#L23-L51))
-* **model.py** - Implements function to load embeddings, model creation, training, validating and testing. Uses a given pretrained model and a tokenized data set and does training/validation/testing as specified in the given mode of the config.json file. ([docstring](https://github.com/lukasmoldon/genderBERT/blob/master/model.py#L44-L82))
+* **main.py** - Main file of the project. Uses tokenization and model functionalities to create new models in accordance to the configuration set in the config.json ([docstring](https://github.com/lukasmoldon/genderBERT/blob/master/main.py#L56-L74))
+* **tokenizer.py** - Prepares the data for the main file. The given data set gets tokenized with applied padding and oversized texts get truncated. It stores the resulting tokenized texts and the corresponding attention mask. ([docstring](https://github.com/lukasmoldon/genderBERT/blob/master/tokenizer.py#L25-L53))
+* **model.py** - Implements function to load embeddings, model creation, training, validating and testing. Uses a given pretrained model and a tokenized data set and does training/validation/testing as specified in the given mode of the config.json file.
 * **majority_voting.py** - Computes the majority voting for a given prediction of a BERT model and displays [accuracy](https://en.wikipedia.org/wiki/Accuracy_and_precision) and [F1](https://en.wikipedia.org/wiki/F1_score) after applying majority voting. Whenever a user with multiple texts but different predictions on gender has a majority for one gender, all minority predictions get changed to the majority prediction. The function does not change predictions for users with no predicted majority for one gender (50/50 case). ([docstring](https://github.com/lukasmoldon/genderBERT/blob/master/majority_voting.py#L9-L22))
 * **customBERT.py** - Additional (failed) approach, where BERT gets extended by 3 adjustable layers (e.g. linear). All attempts resulted in an accuracy below 0.75.
 * **run_cluster.py** - Script for training the same model with different learning rates, maximal tokencounts and truncating methods consecutively.
