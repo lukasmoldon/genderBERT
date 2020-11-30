@@ -18,18 +18,32 @@ def set_config():
             logging.error("Invalid config number!")
         else:
             global EPOCHS, LEARNING_RATE, BATCH_SIZE, MAX_TOKENCOUNT, TRUNCATING_METHOD, TOGGLE_PHASES, SAVE_MODEL, PRELOAD_MODEL, LOAD_EMBEDDINGS, ROWS_COUNTS, MODEL_TYPE, DATASET_TYPE, BASE_FREEZE
+            # Number of epochs
             EPOCHS = config[mode]["EPOCHS"]
+            # Learning rate
             LEARNING_RATE = config[mode]["LEARNING_RATE"]
+            # Batch size
             BATCH_SIZE = config[mode]["BATCH_SIZE"]
+            # Max token count (used for embedding)
             MAX_TOKENCOUNT = config[mode]["MAX_TOKENCOUNT"]
+            # Methods: Head, Tail, Headtail
             TRUNCATING_METHOD = config[mode]["TRUNCATING_METHOD"]
+            # Bool array of the form: [Do_Train_Phase, Do_Val_Phase, Do_Test_Phase]
             TOGGLE_PHASES = config[mode]["TOGGLE_PHASES"]
+            # Save to given path, do not save if none
             SAVE_MODEL = config[mode]["SAVE_MODEL"]
+            # Load model from given path, do not load if none
             PRELOAD_MODEL = config[mode]["PRELOAD_MODEL"]
+            # Load embeddings from given path of a size 3 array [train, val, test]
+            # do not load if corresponding entry is none
             LOAD_EMBEDDINGS = config[mode]["LOAD_EMBEDDINGS"]
+            # Number of rows to consider, given by a size 3 array (see above)
             ROWS_COUNTS = config[mode]["ROWS_COUNTS"]
+            # Types: bert, albert, roberta, distilbert, custombert
             MODEL_TYPE = config[mode]["MODEL_TYPE"]
+            # Types: amazon, reddit, stackover
             DATASET_TYPE = config[mode]["DATASET_TYPE"]
+            # Freeze base layers if True
             BASE_FREEZE = config[mode]["BASE_FREEZE"]
     elif len(sys.argv) == 1:
         logging.warning("Config number missing!")
@@ -38,6 +52,27 @@ def set_config():
 
 
 def main(return_model):
+
+    """
+    Main function of the module. Create a model, train and evaluate it based on the config JSON.
+    For an explanation of the JSON see the set_config() function.
+    Steps of main function:
+    (1) Create/Load embeddings for train, validation and test data.
+    (2) Create dataloader from embeddings for faster and easier training.
+    (3) Create model, optimizer and scheduler. Load to CUDA.
+    (4) Train, validate and test model (according to config).
+    (5) Save/return model if parameter is set.
+
+    Parameters:
+        return_model(bool): Returns model and stats (loss/acc) if set to True, only return latter if set to False.
+
+    Returns:
+        model(transformers.AutoModelForSequenceClassification): Trained model. Gets return if return_model is True.
+
+        stats([dict]): Array of train loss/acc of model for each epoch.
+    '''
+    """
+    
     set_config()
     logging.basicConfig(
         format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%m-%y %H:%M:%S', level=logging.INFO)

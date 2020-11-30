@@ -110,6 +110,7 @@ def create_model(preload_model, model_type, bert_freeze):
 
 
 def load_to_cuda(model):
+    # Load model to cuda
     if torch.cuda.is_available():
         device = torch.device("cuda:0")
         model.cuda()
@@ -121,6 +122,7 @@ def load_to_cuda(model):
 
 
 def create_optimizer(model, learning_rate, num_train_steps):
+    # Create AdamW optimizer and scheduler with warmup
     optimizer = AdamW(model.parameters(),
                       lr=learning_rate,
                       eps=1e-8)
@@ -232,7 +234,7 @@ def test_model(model, data_loader, device, model_type):
         b_user_ids = batch[3].to(device)
         with torch.no_grad():
             outputs = model(b_input_ids,
-                            token_type_ids=None,
+                            #token_type_ids=None,
                             attention_mask=b_input_mask,
                             labels=None)
             ind = 1 if model_type == "custom_bert" else 0

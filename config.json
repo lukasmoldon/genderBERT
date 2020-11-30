@@ -95,13 +95,13 @@
         "BATCH_SIZE": 16,
         "MAX_TOKENCOUNT": 64,
         "TRUNCATING_METHOD": "headtail",
-        "TOGGLE_PHASES": [false, false, true],
-        "SAVE_MODEL": null,
-        "PRELOAD_MODEL": "reddit_epoch_4",
-        "LOAD_EMBEDDINGS": [null, null, "reddit_bert_100_64_headtail_test"],
-        "ROWS_COUNTS": [null, null, 100],
+        "TOGGLE_PHASES": [true, false, true],
+        "SAVE_MODEL": "amazon_bert_true",
+        "PRELOAD_MODEL": null,
+        "LOAD_EMBEDDINGS": [null, null, null],
+        "ROWS_COUNTS": [1000000, null, null],
         "MODEL_TYPE": "bert",
-        "DATASET_TYPE": "reddit",
+        "DATASET_TYPE": "amazon",
         "BASE_FREEZE": false
     }
 }
