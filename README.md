@@ -1,6 +1,6 @@
 
 # genderBERT
-Deep learning model for gender classification on texts using pretrained BERT models. Our trained models with the highest accuracy for each data set (see section ['Results'](https://github.com/lukasmoldon/genderBERT#results-on-data)) can be downloaded [via zenodo.org](https://www.zenodo.org/) or [via figshare.com](https://figshare.com/).
+Deep learning model for gender classification on texts using pretrained BERT models. Our trained models with the highest accuracy for each data set (see section ['Results'](https://github.com/lukasmoldon/genderBERT#results-on-data)) can be downloaded [via figshare.com](https://figshare.com/s/3bd528e04efa90567d91).
 
 ## Used pretrained models
 
