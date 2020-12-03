@@ -1,6 +1,6 @@
 
 # genderBERT
-Deep learning model for gender classification on texts using pretrained BERT models for the paper '' **(TODO)**. Our trained model with the highest accuracy (see section 'Results') can be downloaded here **(TODO)**.
+Deep learning model for gender classification on texts using pretrained BERT models. Our trained models with the highest accuracy for each data set (see section ['Results'](https://github.com/lukasmoldon/genderBERT#results-on-data)) can be downloaded [via zenodo.org](https://www.zenodo.org/) or [via figshare.com](https://figshare.com/).
 
 ## Used pretrained models
 
@@ -29,8 +29,8 @@ Deep learning model for gender classification on texts using pretrained BERT mod
 
 ## Code
 :arrow_forward: For more detailed information, use the corresponding link to the [docsring](https://www.python.org/dev/peps/pep-0257/) at the end of each descirption.
-* **main.py** - Main file of the project. Uses tokenization and model functionalities to create new models in accordance to the configuration set in the config.son ([docstring](https://github.com/lukasmoldon/genderBERT/blob/master/main.py#L56-74))
-* **tokenizer.py** - Prepares the data for the main file. The given data set gets tokenized with applied padding and oversized texts get truncated. It stores the resulting tokenized texts and the corresponding attention mask. ([docstring](https://github.com/lukasmoldon/genderBERT/blob/master/tokenizer.py#L23-L51))
+* **main.py** - Main file of the project. Uses tokenization and model functionalities to create new models in accordance to the configuration set in the config.json ([docstring](https://github.com/lukasmoldon/genderBERT/blob/master/main.py#L56-L74))
+* **tokenizer.py** - Prepares the data for the main file. The given data set gets tokenized with applied padding and oversized texts get truncated. It stores the resulting tokenized texts and the corresponding attention mask. ([docstring](https://github.com/lukasmoldon/genderBERT/blob/master/tokenizer.py#L25-L53))
 * **model.py** - Implements function to load embeddings, model creation, training, validating and testing. Uses a given pretrained model and a tokenized data set and does training/validation/testing as specified in the given mode of the config.json file.
 * **majority_voting.py** - Computes the majority voting for a given prediction of a BERT model and displays [accuracy](https://en.wikipedia.org/wiki/Accuracy_and_precision) and [F1](https://en.wikipedia.org/wiki/F1_score) after applying majority voting. Whenever a user with multiple texts but different predictions on gender has a majority for one gender, all minority predictions get changed to the majority prediction. The function does not change predictions for users with no predicted majority for one gender (50/50 case). ([docstring](https://github.com/lukasmoldon/genderBERT/blob/master/majority_voting.py#L9-L22))
 * **customBERT.py** - Additional (failed) approach, where BERT gets extended by 3 adjustable layers (e.g. linear). All attempts resulted in an accuracy below 0.75.
@@ -68,7 +68,7 @@ Deep learning model for gender classification on texts using pretrained BERT mod
     <td>VCDNN</td>
     <td>0.751</td>
     <td>0.770</td>
-    <td>0.761</td>
+    <td><b>0.761</b></td>
     <td>0.823</td>
     <td>0.834</td>
     <td>0.831</td>
@@ -80,7 +80,7 @@ Deep learning model for gender classification on texts using pretrained BERT mod
     <td>0.759</td>
     <td>0.824</td>
     <td>0.841</td>
-    <td>0.833</td>
+    <td><b>0.833</b></td>
   </tr>
   <tr>
     <td>BERT/F (1M)</td>
@@ -147,13 +147,13 @@ Deep learning model for gender classification on texts using pretrained BERT mod
     <td>0.649</td>
     <td>0.743</td>
     <td>0.725</td>
-    <td>0.734</td>
+    <td><b>0.734</b></td>
   </tr>
   <tr>
     <td>roBERTa (2e-5)</td>
     <td>0.658</td>
     <td>0.653</td>
-    <td>0.655</td>
+    <td><b>0.655</b></td>
     <td>0.724</td>
     <td>0.710</td>
     <td>0.717</td>
@@ -208,16 +208,16 @@ Deep learning model for gender classification on texts using pretrained BERT mod
     <td>0.865</td>
   </tr>
   <tr>
-    <td>BERT(10%)</td>
+    <td>BERT (10%)</td>
     <td>0.702</td>
     <td>0.686</td>
-    <td>0.695</td>
+    <td><b>0.695</b></td>
     <td>0.914</td>
     <td>0.905</td>
-    <td>0.914</td>
+    <td><b>0.914</b></td>
   </tr>
   <tr>
-    <td>roBERTa(10%)</td>
+    <td>roBERTa (10%)</td>
     <td>0.685</td>
     <td>0.681</td>
     <td>0.683</td>
