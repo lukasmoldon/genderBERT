@@ -74,7 +74,7 @@ Deep learning model for gender classification on texts using pretrained BERT mod
     <td>0.831</td>
   </tr>
   <tr>
-    <td>BERT (1M)</td>
+    <td>BERT (OLD)</td>
     <td>0.747</td>
     <td>0.770</td>
     <td>0.759</td>
@@ -83,16 +83,16 @@ Deep learning model for gender classification on texts using pretrained BERT mod
     <td><b>0.833</b></td>
   </tr>
   <tr>
-    <td>BERT/F (1M)</td>
-    <td>0.708</td>
-    <td>0.669</td>
-    <td>0.689</td>
-    <td>0.769</td>
-    <td>0.732</td>
-    <td>0.752</td>
+    <td>BERT (NEW)</td>
+    <td>0.735</td>
+    <td>0.764</td>
+    <td>0.750</td>
+    <td>0.808</td>
+    <td>0.830</td>
+    <td><b>0.820</b></td>
   </tr>
   <tr>
-    <td>alBERT (1M)</td>
+    <td>alBERT</td>
     <td>0.750</td>
     <td>0.767</td>
     <td>0.759</td>
@@ -101,7 +101,7 @@ Deep learning model for gender classification on texts using pretrained BERT mod
     <td>0.830</td>
   </tr>
   <tr>
-    <td>distilBERT (1M)</td>
+    <td>distilBERT</td>
     <td>0.731</td>
     <td>0.754</td>
     <td>0.743</td>
