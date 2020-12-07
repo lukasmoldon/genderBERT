@@ -89,7 +89,7 @@ Deep learning model for gender classification on texts using pretrained BERT mod
     <td>0.750</td>
     <td>0.808</td>
     <td>0.830</td>
-    <td><b>0.820</b></td>
+    <td>0.820</td>
   </tr>
   <tr>
     <td>alBERT</td>
