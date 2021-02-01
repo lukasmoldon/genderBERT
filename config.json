@@ -12,6 +12,12 @@
         "ROWS_COUNTS": [10, null, null],
         "MODEL_TYPE": "bert",
         "DATASET_TYPE": "amazon",
+        "PATH_TRAIN": "../datasets/amazon/User_level_train.csv",
+        "COLUMNS_TRAIN": ["Gender", "ReviewText"],
+        "PATH_VALIDATION": "../datasets/amazon/User_level_validation.csv",
+        "COLUMNS_VALIDATION": ["Gender", "ReviewText"],
+        "PATH_TEST": "../datasets/amazon/User_level_test_with_id.csv",
+        "COLUMNS_TEST": ["UserId", "ReviewText", "Gender"],
         "BASE_FREEZE": true
     },
     "2": {
@@ -27,6 +33,12 @@
         "ROWS_COUNTS": [null, null, null],
         "MODEL_TYPE": "roberta",
         "DATASET_TYPE": "stackover",
+        "PATH_TRAIN": "../datasets/stackover/train_so.csv",
+        "COLUMNS_TRAIN": ["Gender", "ReviewText"],
+        "PATH_VALIDATION": "../datasets/stackover/validation_so.csv",
+        "COLUMNS_VALIDATION": ["Gender", "ReviewText"],
+        "PATH_TEST": "../datasets/stackover/test_so.csv",
+        "COLUMNS_TEST": ["UserId", "Gender", "ReviewText"],
         "BASE_FREEZE": false
     },
     "3": {
@@ -42,6 +54,12 @@
         "ROWS_COUNTS": [10, null, 10],
         "MODEL_TYPE": "bert",
         "DATASET_TYPE": "stackover",
+        "PATH_TRAIN": "../datasets/stackover/train_so.csv",
+        "COLUMNS_TRAIN": ["Gender", "ReviewText"],
+        "PATH_VALIDATION": "../datasets/stackover/validation_so.csv",
+        "COLUMNS_VALIDATION": ["Gender", "ReviewText"],
+        "PATH_TEST": "../datasets/stackover/test_so.csv",
+        "COLUMNS_TEST": ["UserId", "Gender", "ReviewText"],
         "BASE_FREEZE": true
     },
     "4": {
@@ -57,6 +75,12 @@
         "ROWS_COUNTS": [null, null, null],
         "MODEL_TYPE": "bert",
         "DATASET_TYPE": "stackover",
+        "PATH_TRAIN": "../datasets/stackover/train_so.csv",
+        "COLUMNS_TRAIN": ["Gender", "ReviewText"],
+        "PATH_VALIDATION": "../datasets/stackover/validation_so.csv",
+        "COLUMNS_VALIDATION": ["Gender", "ReviewText"],
+        "PATH_TEST": "../datasets/stackover/test_so.csv",
+        "COLUMNS_TEST": ["UserId", "Gender", "ReviewText"],
         "BASE_FREEZE": true
     },
     "5": {
@@ -72,6 +96,12 @@
         "ROWS_COUNTS": [2000000, null, 100000],
         "MODEL_TYPE": "bert",
         "DATASET_TYPE": "reddit",
+        "PATH_TRAIN": "../datasets/reddit/train_reddit.csv",
+        "COLUMNS_TRAIN": ["Gender", "ReviewText"],
+        "PATH_VALIDATION": "../datasets/reddit/validation_reddit.csv",
+        "COLUMNS_VALIDATION": ["Gender", "ReviewText"],
+        "PATH_TEST": "../datasets/reddit/test_reddit.csv",
+        "COLUMNS_TEST": ["UserId", "Gender", "ReviewText"],
         "BASE_FREEZE": false
     },
     "6": {
@@ -87,6 +117,12 @@
         "ROWS_COUNTS": [2849692, null, null],
         "MODEL_TYPE": "roberta",
         "DATASET_TYPE": "reddit",
+        "PATH_TRAIN": "../datasets/reddit/train_reddit.csv",
+        "COLUMNS_TRAIN": ["Gender", "ReviewText"],
+        "PATH_VALIDATION": "../datasets/reddit/validation_reddit.csv",
+        "COLUMNS_VALIDATION": ["Gender", "ReviewText"],
+        "PATH_TEST": "../datasets/reddit/test_reddit.csv",
+        "COLUMNS_TEST": ["UserId", "Gender", "ReviewText"],
         "BASE_FREEZE": false
     },
     "7": {
@@ -102,11 +138,17 @@
         "ROWS_COUNTS": [1000000, null, null],
         "MODEL_TYPE": "bert",
         "DATASET_TYPE": "amazon",
+        "PATH_TRAIN": "../datasets/amazon/User_level_train.csv",
+        "COLUMNS_TRAIN": ["Gender", "ReviewText"],
+        "PATH_VALIDATION": "../datasets/amazon/User_level_validation.csv",
+        "COLUMNS_VALIDATION": ["Gender", "ReviewText"],
+        "PATH_TEST": "../datasets/amazon/User_level_test_with_id.csv",
+        "COLUMNS_TEST": ["UserId", "ReviewText", "Gender"],
         "BASE_FREEZE": false
     },
     "8": {
         "EPOCHS": 4,
-        "LEARNING_RATE": 2e-5,
+        "LEARNING_RATE": 0.01,
         "BATCH_SIZE": 16,
         "MAX_TOKENCOUNT": 64,
         "TRUNCATING_METHOD": "headtail",
@@ -114,9 +156,15 @@
         "SAVE_MODEL": "demo_res",
         "PRELOAD_MODEL": null,
         "LOAD_EMBEDDINGS": [null, null, null],
-        "ROWS_COUNTS": [1000000, null, null],
+        "ROWS_COUNTS": [null, null, null],
         "MODEL_TYPE": "bert",
         "DATASET_TYPE": "demo",
+        "PATH_TRAIN": "./datasets/train_s.csv",
+        "COLUMNS_TRAIN": ["Gender", "ReviewText"],
+        "PATH_VALIDATION": null,
+        "COLUMNS_VALIDATION": null,
+        "PATH_TEST": "./datasets/test_s.csv",
+        "COLUMNS_TEST": ["Gender", "ReviewText"],
         "BASE_FREEZE": false
     }
 }
