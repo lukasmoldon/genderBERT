@@ -17,7 +17,7 @@ def set_config():
         if mode not in config:
             logging.error("Invalid config number!")
         else:
-            global EPOCHS, LEARNING_RATE, BATCH_SIZE, MAX_TOKENCOUNT, TRUNCATING_METHOD, TOGGLE_PHASES, SAVE_MODEL, PRELOAD_MODEL, LOAD_EMBEDDINGS, ROWS_COUNTS, MODEL_TYPE, DATASET_TYPE, BASE_FREEZE
+            global EPOCHS, LEARNING_RATE, BATCH_SIZE, MAX_TOKENCOUNT, TRUNCATING_METHOD, TOGGLE_PHASES, SAVE_MODEL, PRELOAD_MODEL, LOAD_EMBEDDINGS, ROWS_COUNTS, MODEL_TYPE, DATASET_TYPE, PATH_TRAIN, COLUMNS_TRAIN, PATH_VALIDATION, COLUMNS_VALIDATION, PATH_TEST, COLUMNS_TEST, BASE_FREEZE
             # Number of epochs
             EPOCHS = config[mode]["EPOCHS"]
             # Learning rate
@@ -41,8 +41,15 @@ def set_config():
             ROWS_COUNTS = config[mode]["ROWS_COUNTS"]
             # Types: bert, albert, roberta, distilbert, custombert
             MODEL_TYPE = config[mode]["MODEL_TYPE"]
-            # Types: amazon, reddit, stackover
+            # Types: amazon, reddit, stackover, demo
             DATASET_TYPE = config[mode]["DATASET_TYPE"]
+            # paths and format of train, validation and test data
+            PATH_TRAIN = config[mode]["PATH_TRAIN"]
+            COLUMNS_TRAIN = config[mode]["COLUMNS_TRAIN"]
+            PATH_VALIDATION = config[mode]["PATH_VALIDATION"]
+            COLUMNS_VALIDATION = config[mode]["COLUMNS_VALIDATION"]
+            PATH_TEST = config[mode]["PATH_TEST"]
+            COLUMNS_TEST = config[mode]["COLUMNS_TEST"]
             # Freeze base layers if True
             BASE_FREEZE = config[mode]["BASE_FREEZE"]
     elif len(sys.argv) == 1:
@@ -78,7 +85,7 @@ def main(return_model):
         format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%m-%y %H:%M:%S', level=logging.INFO)
     log_starttime = datetime.datetime.now()
     train_data, val_data, test_data = load_embeddings(
-        DATASET_TYPE, MODEL_TYPE, TOGGLE_PHASES, LOAD_EMBEDDINGS, ROWS_COUNTS, MAX_TOKENCOUNT, TRUNCATING_METHOD, save_embeddings=False)
+        DATASET_TYPE, PATH_TRAIN, COLUMNS_TRAIN, PATH_VALIDATION, COLUMNS_VALIDATION, PATH_TEST, COLUMNS_TEST, MODEL_TYPE, TOGGLE_PHASES, LOAD_EMBEDDINGS, ROWS_COUNTS, MAX_TOKENCOUNT, TRUNCATING_METHOD, save_embeddings=False)
     logging.info("Create dataloaders ...")
     train_dataloader = create_dataloader(train_data, BATCH_SIZE)
     val_dataloader = create_dataloader(val_data, BATCH_SIZE)

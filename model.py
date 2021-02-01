@@ -19,19 +19,14 @@ from majority_voting import mv_stats_f1
 from customBERT import CustomBERTModel
 
 
-PATHS = {"amazon": ["../datasets/amazon/User_level_train.csv", "../datasets/amazon/User_level_validation.csv", "../datasets/amazon/User_level_test_with_id.csv"],
-         "stackover": ["../datasets/stackover/train_so.csv", "../datasets/stackover/validation_so.csv", "../datasets/stackover/test_so.csv"],
-         "reddit": ["../datasets/reddit/train_reddit.csv", "../datasets/reddit/validation_reddit.csv", "../datasets/reddit/test_reddit.csv"],
-         "try": ["try.csv", None, None],
-         "demo": ["./datasets/train_s.csv", None, "./datasets/test_s.csv"]}
 
-
-def load_embeddings(dataset_type, model_type, toggle_phases, load_embeddings, rows_counts, max_tokencount, truncating_method, save_embeddings):
+def load_embeddings(dataset_type, path_train, columns_train, path_validation, columns_validation, path_test, columns_test, model_type, toggle_phases, load_embeddings, rows_counts, max_tokencount, truncating_method, save_embeddings):
     # Load tokenized data
     logging.info("Tokenize train/validation data ...")
     embeddings = [None, None, None]
     embeddings = [None, None, None]
-    paths = PATHS[dataset_type]
+    paths = [path_train, path_validation, path_test]
+    columns = [columns_train, columns_validation, columns_test]
     phases = ["train", "val", "test"]
     embedding_paths = [None, None, None]
     # Create paths for saving embeddings (if saving is selected)
@@ -54,12 +49,12 @@ def load_embeddings(dataset_type, model_type, toggle_phases, load_embeddings, ro
                 embeddings[i] = torch.load(load_embeddings[i])
             # Create exactly row counts many embedded instances
             elif rows_counts[i] is not None:    
-                embeddings[i] = prepare_data(paths[i], True, num_rows=rows_counts[i], max_tokencount=max_tokencount,
+                embeddings[i] = prepare_data(paths[i], columns[i], True, num_rows=rows_counts[i], max_tokencount=max_tokencount,
                                                  truncating_method=truncating_method, embedding_type=model_type,
                                                  dataset_type=dataset_type, file_results=embedding_paths[i])
             # Embed the whole file
             else:
-                embeddings[i] = prepare_data(paths[i], True, max_tokencount=max_tokencount, embedding_type=model_type,
+                embeddings[i] = prepare_data(paths[i], columns[i], True, max_tokencount=max_tokencount, embedding_type=model_type,
                                                  dataset_type=dataset_type, file_results=embedding_paths[i])
     train_data, val_data, test_data = embeddings
     return train_data, val_data, test_data

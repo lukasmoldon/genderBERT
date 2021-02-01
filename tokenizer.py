@@ -20,7 +20,7 @@ cnt_oversized = 0
 
 
 
-def prepare_data(file_data, return_data, max_tokencount=510, truncating_method="head", file_results=None, num_rows=None, embedding_type="bert", dataset_type="amazon"):
+def prepare_data(file_data, columns, return_data, max_tokencount=510, truncating_method="head", file_results=None, num_rows=None, embedding_type="bert", dataset_type="amazon"):
 
     """
     Prepare the data for the BERT model.
@@ -31,6 +31,8 @@ def prepare_data(file_data, return_data, max_tokencount=510, truncating_method="
 
     Parameters:
         file_data(string): Path to input data.
+
+        columns(list): Column names. 
 
         returnDF(bool): Returns tokens as pandas dataframe if true.
 
@@ -51,20 +53,13 @@ def prepare_data(file_data, return_data, max_tokencount=510, truncating_method="
         data(pandas.DataFrame): Returns dataframe of tokens if returnDF is set to true.
     '''
     """
-
     logging.basicConfig(format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%m-%y %H:%M:%S', level=logging.INFO)
     log_starttime = datetime.datetime.now()
     # Load the data
-    if dataset_type == "amazon":
-        names = ["UserId", "ReviewText", "Gender"] if "test" in file_data else ["Gender", "ReviewText"]
-    elif dataset_type == "demo":
-        names = ["Gender", "ReviewText"]
-    else:
-        names = ["UserId", "Gender", "ReviewText"] if "test" in file_data else ["Gender", "ReviewText"]
     if num_rows is None:
-        data = pd.read_csv(file_data, names=names)
+        data = pd.read_csv(file_data, names=columns)
     else:
-        data = pd.read_csv(file_data, nrows=num_rows, names=names)
+        data = pd.read_csv(file_data, nrows=num_rows, names=columns)
     # Swap columns
     if dataset_type != "amazon":
         data = data.reindex(columns=["UserId", "ReviewText", "Gender"]) if "test" in file_data else data
@@ -134,7 +129,7 @@ def prepare_data(file_data, return_data, max_tokencount=510, truncating_method="
         return results
 
 
-def tokenize_data(file_data, returnRes, max_tokencount=510, truncating_method="head", file_results=None, num_rows=None, embedding_type="bert", dataset_type="amazon"):
+def tokenize_data(file_data, columns, returnRes, max_tokencount=510, truncating_method="head", file_results=None, num_rows=None, embedding_type="bert", dataset_type="amazon"):
 
     """
     Cleaner version of prepare_data (BUT WITHOUT TRUNCATION STRATEGY)
@@ -146,6 +141,8 @@ def tokenize_data(file_data, returnRes, max_tokencount=510, truncating_method="h
 
     Parameters:
         file_data(string): Path to input data.
+
+        columns(list): Column names. 
 
         returnRes(bool): Returns result if true.
 
@@ -170,14 +167,10 @@ def tokenize_data(file_data, returnRes, max_tokencount=510, truncating_method="h
 
     logging.basicConfig(format='%(asctime)s [%(levelname)s] - %(message)s', datefmt='%d-%m-%y %H:%M:%S', level=logging.INFO)
     # Load the data
-    if dataset_type == "amazon":
-        names = ["UserId", "ReviewText", "Gender"] if "test" in file_data else ["Gender", "ReviewText"]
-    else:
-        names = ["UserId", "Gender", "ReviewText"] if "test" in file_data else ["Gender", "ReviewText"]
     if num_rows is None:
-        data = pd.read_csv(file_data, names=names)
+        data = pd.read_csv(file_data, names=columns)
     else:
-        data = pd.read_csv(file_data, nrows=num_rows, names=names)
+        data = pd.read_csv(file_data, nrows=num_rows, names=columns)
     # Swap columns
     if dataset_type != "amazon":
         data = data.reindex(columns=["UserId", "ReviewText", "Gender"]) if "test" in file_data else data
