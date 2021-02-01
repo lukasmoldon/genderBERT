@@ -57,6 +57,8 @@ def prepare_data(file_data, return_data, max_tokencount=510, truncating_method="
     # Load the data
     if dataset_type == "amazon":
         names = ["UserId", "ReviewText", "Gender"] if "test" in file_data else ["Gender", "ReviewText"]
+    elif dataset_type == "demo":
+        names = ["Gender", "ReviewText"]
     else:
         names = ["UserId", "Gender", "ReviewText"] if "test" in file_data else ["Gender", "ReviewText"]
     if num_rows is None:

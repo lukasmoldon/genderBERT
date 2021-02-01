@@ -22,7 +22,8 @@ from customBERT import CustomBERTModel
 PATHS = {"amazon": ["../datasets/amazon/User_level_train.csv", "../datasets/amazon/User_level_validation.csv", "../datasets/amazon/User_level_test_with_id.csv"],
          "stackover": ["../datasets/stackover/train_so.csv", "../datasets/stackover/validation_so.csv", "../datasets/stackover/test_so.csv"],
          "reddit": ["../datasets/reddit/train_reddit.csv", "../datasets/reddit/validation_reddit.csv", "../datasets/reddit/test_reddit.csv"],
-         "try": ["try.csv", None, None]}
+         "try": ["try.csv", None, None],
+         "demo": ["./datasets/train_s.csv", None, "./datasets/test_s.csv"]}
 
 
 def load_embeddings(dataset_type, model_type, toggle_phases, load_embeddings, rows_counts, max_tokencount, truncating_method, save_embeddings):

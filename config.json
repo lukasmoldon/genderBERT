@@ -103,5 +103,20 @@
         "MODEL_TYPE": "bert",
         "DATASET_TYPE": "amazon",
         "BASE_FREEZE": false
+    },
+    "8": {
+        "EPOCHS": 4,
+        "LEARNING_RATE": 2e-5,
+        "BATCH_SIZE": 16,
+        "MAX_TOKENCOUNT": 64,
+        "TRUNCATING_METHOD": "headtail",
+        "TOGGLE_PHASES": [true, false, true],
+        "SAVE_MODEL": "demo_res",
+        "PRELOAD_MODEL": null,
+        "LOAD_EMBEDDINGS": [null, null, null],
+        "ROWS_COUNTS": [1000000, null, null],
+        "MODEL_TYPE": "bert",
+        "DATASET_TYPE": "demo",
+        "BASE_FREEZE": false
     }
 }
