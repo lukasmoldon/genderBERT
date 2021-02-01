@@ -40,8 +40,28 @@ Deep learning model for gender classification on texts using pretrained BERT mod
 * **data_subset.csv** - Sample of Amazon training data (10k raw elements) for testing general code functionality on local machines.
 
 ## How to use
-* **1.** Set config in the corresponding JSON file.
-* **2.** Run main.py with the config number as a command line argument. 
+*  **1.** Add your config to the corresponding JSON file:
+	* `EPOCHS` - Number of epochs for training
+	* `LEARNING_RATE` - Used learning rate for the model
+	* `BATCH_SIZE` - Used batch size for the model
+	* `MAX_TOKENCOUNT` - Maximal token count (used for embedding)
+	* `TRUNCATING_METHOD` -  Method for cutting oversized data (Head, Tail, Headtail)
+	* `TOGGLE_PHASES` - Bool array of the form: [Do_Train_Phase, Do_Val_Phase, Do_Test_Phase]
+	* `SAVE_MODEL` - Save to given path, do not save if `none`
+	* `PRELOAD_MODEL` - Load model from given path, do not load if `none`
+	* `LOAD_EMBEDDINGS` - Load embeddings from given path of a size 3 array [train, val, test], do not load if `none`
+	* `ROWS_COUNTS` - Number of rows to consider, given by a size 3 array (see above)
+	* `MODEL_TYPE` - Types: bert, albert, roberta, distilbert, custombert
+	* `DATASET_TYPE` - Unique name for the dataset (used for storing data)
+	* `PATH_TRAIN` - Path to the train data
+	* `COLUMNS_TRAIN` - Format of the train data (e.g. `["UserId", "Gender", "ReviewText"]`)
+	* `PATH_VALIDATION` - Path to the validation data
+	* `COLUMNS_VALIDATION` - Format of the validation data (e.g. `["UserId", "Gender", "ReviewText"]`)
+	* `PATH_TEST` - Path to the test data
+	* `COLUMNS_TEST` - Format of the test data (e.g. `["Gender", "ReviewText"]`)
+	* `BASE_FREEZE` - Freeze base layers if `True`
+
+*  **2.** Run main.py with the config number as a command line argument (e.g. run `python main.py 8` to use config entry with ID 8).
 
 ## Results on data
 
